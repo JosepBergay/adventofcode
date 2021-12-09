@@ -3,36 +3,41 @@ import { fetchInput } from "../helpers.js";
 
 const level = 1;
 
-const executePart1 = (input: number[]) => {
-  let increased = 0;
+type ParsedInput = number[];
+
+const parser = (input: string): ParsedInput =>
+  input.split("\n").map((i) => parseInt(i));
+
+const executePart1 = (input: ParsedInput): string => {
+  let result = 0;
 
   input.reduce((p, c) => {
-    if (c > p) ++increased;
+    if (c > p) ++result;
     return c;
   });
 
-  return `${increased}`;
+  return `${result}`;
 };
 
-const executePart2 = (input: number[]) => {
-  let increased = 0;
+const executePart2 = (input: ParsedInput): string => {
+  let result = 0;
   let previous;
 
   for (let i = 0; i + 2 < input.length; i++) {
     const current = input[i] + input[i + 1] + input[i + 2];
     if (previous != undefined && current > previous) {
-      increased++;
+      result++;
     }
     previous = current;
   }
 
-  return `${increased}`;
+  return `${result}`;
 };
 
-export const day1: AOCDay = async () => {
+const day1: AOCDay = async () => {
   const input = await fetchInput(level);
 
-  const parsed = input.split("\n").map((i) => parseInt(i));
+  const parsed = parser(input);
 
   const part1 = executePart1(parsed);
 
@@ -40,3 +45,5 @@ export const day1: AOCDay = async () => {
 
   return { level, part1, part2 };
 };
+
+export default day1;
