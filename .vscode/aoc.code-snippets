@@ -1,0 +1,55 @@
+{
+	// Place your adventofcode21 workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+	"aocday": {
+		"scope": "typescript",
+		"prefix": "aocday",
+		"body": [
+			"import type { AOCDay } from \"../types\";",
+			"import { fetchInput } from \"../helpers.js\";",
+			"",
+			"const level = ${1:x};",
+			"",
+			"type ParsedInput = ${2:any}[];",
+			"",
+			"const parser = (input: string): ParsedInput =>",
+			"  input.split(\"\\n\").map(${3:mapper});",
+			"",
+			"const executePart1 = (input: ParsedInput): string => {",
+			"  return \"\";",
+			"}",
+			"",
+			"const executePart2 = (input: ParsedInput): string => {",
+			"  return \"\";",
+			"}",
+			"",
+			"const day$1: AOCDay = async () => {",
+			"  const input = await fetchInput(level);",
+			"",
+			"  const parsed = parser(input);",
+			"",
+			"  const part1 = executePart1(parsed);",
+			"",
+			"  const part2 = executePart2(parsed);",
+			"",
+			"  return { level, part1, part2 };",
+			"};",
+			"",
+			"export default day$1;",
+		]
+	}
+}
