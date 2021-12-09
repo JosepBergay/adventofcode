@@ -39,7 +39,26 @@ const executePart1 = (input: ParsedInput): string => {
 };
 
 const executePart2 = (input: ParsedInput): string => {
-    return "";
+  const result = input.reduce(
+    (p, c) => {
+      if (c.dir === "down") {
+        return { ...p, aim: p.aim + c.units };
+      } else if (c.dir === "up") {
+        return { ...p, aim: p.aim - c.units };
+      } else if (c.dir === "forward") {
+        return {
+          ...p,
+          horizontal: p.horizontal + c.units,
+          depth: p.aim * c.units + p.depth,
+        };
+      } else {
+        return p;
+      }
+    },
+    { horizontal: 0, depth: 0, aim: 0 }
+  );
+
+  return `${result.horizontal * result.depth}`;
 };
 
 const day2: AOCDay = async () => {
