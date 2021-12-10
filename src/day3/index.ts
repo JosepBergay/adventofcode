@@ -11,7 +11,7 @@ const parser = (input: string): ParsedInput => {
   return parsed;
 };
 
-const findMostCommonBit = (input: ParsedInput, pos: number) => {
+const getNumberOfBits = (input: ParsedInput, pos: number) => {
   let numberOfZeroes = 0;
   let numberOfOnes = 0;
 
@@ -23,6 +23,11 @@ const findMostCommonBit = (input: ParsedInput, pos: number) => {
       numberOfOnes++;
     }
   }
+  return { numberOfZeroes, numberOfOnes };
+};
+
+const findMostCommonBit = (input: ParsedInput, pos: number) => {
+  const { numberOfOnes, numberOfZeroes } = getNumberOfBits(input, pos);
 
   return numberOfOnes > numberOfZeroes ? "1" : "0";
 };
@@ -49,7 +54,47 @@ const executePart1 = (input: ParsedInput): string => {
 };
 
 const executePart2 = (input: ParsedInput): string => {
-  return "";
+  // Compute Oxygen Generator rating
+  let o2inputs = input;
+  
+  while (o2inputs.length > 1) {
+    for (let bitPos = 0; bitPos < input[0].length; bitPos++) {
+      const { numberOfZeroes, numberOfOnes } = getNumberOfBits(o2inputs, bitPos);
+
+      if (numberOfOnes >= numberOfZeroes) {
+        o2inputs = o2inputs.filter((bits) => bits[bitPos] == "1");
+      } else {
+        o2inputs = o2inputs.filter((bits) => bits[bitPos] == "0");
+      }
+
+      if (o2inputs.length == 1)
+        break;
+    }
+  }
+
+  const o2rating = parseInt(o2inputs[0], 2);
+  
+  // Compute CO2 Scrubber rating
+  let co2inputs = input;
+
+  while (co2inputs.length > 1) {
+    for (let bitPos = 0; bitPos < input[0].length; bitPos++) {
+      const { numberOfZeroes, numberOfOnes } = getNumberOfBits(co2inputs, bitPos);
+
+      if (numberOfOnes >= numberOfZeroes) {
+        co2inputs = co2inputs.filter((bits) => bits[bitPos] == "0");
+      } else {
+        co2inputs = co2inputs.filter((bits) => bits[bitPos] == "1");
+      }
+  
+      if (co2inputs.length == 1)
+        break;
+    }
+  }
+
+  const co2rating = parseInt(co2inputs[0], 2);
+
+  return `${o2rating * co2rating}`;
 };
 
 const day3: AOCDay = async () => {
