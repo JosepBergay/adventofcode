@@ -32,6 +32,16 @@ const findMostCommonBit = (input: ParsedInput, pos: number) => {
   return numberOfOnes > numberOfZeroes ? "1" : "0";
 };
 
+const filterRowOnNumberOfBits = (
+  input: ParsedInput,
+  bitPos: number,
+  filterFn: (row: ParsedInput[0], ones: number, zeros: number) => boolean
+) => {
+  const { numberOfZeroes, numberOfOnes } = getNumberOfBits(input, bitPos);
+
+  return input.filter((row) => filterFn(row, numberOfOnes, numberOfZeroes));
+};
+
 const executePart1 = (input: ParsedInput): string => {
   let g = "";
   let e = "";
@@ -54,43 +64,32 @@ const executePart1 = (input: ParsedInput): string => {
 };
 
 const executePart2 = (input: ParsedInput): string => {
-  // Compute Oxygen Generator rating
   let o2inputs = input;
-  
-  while (o2inputs.length > 1) {
-    for (let bitPos = 0; bitPos < input[0].length; bitPos++) {
-      const { numberOfZeroes, numberOfOnes } = getNumberOfBits(o2inputs, bitPos);
+  let co2inputs = input;
 
-      if (numberOfOnes >= numberOfZeroes) {
-        o2inputs = o2inputs.filter((bits) => bits[bitPos] == "1");
-      } else {
-        o2inputs = o2inputs.filter((bits) => bits[bitPos] == "0");
-      }
-
-      if (o2inputs.length == 1)
-        break;
+  for (let bitPos = 0; bitPos < input[0].length; bitPos++) {
+    // Compute Oxygen Generator rating
+    if (o2inputs.length > 1) {
+      o2inputs = filterRowOnNumberOfBits(
+        o2inputs,
+        bitPos,
+        (row, ones, zeroes) => row[bitPos] == (ones >= zeroes ? "1" : "0")
+      );
     }
+
+    // Compute CO2 Scrubber rating
+    if (co2inputs.length > 1) {
+      co2inputs = filterRowOnNumberOfBits(
+        co2inputs,
+        bitPos,
+        (row, ones, zeroes) => row[bitPos] == (ones >= zeroes ? "0" : "1")
+      );
+    }
+
+    if (o2inputs.length == 1 && co2inputs.length == 1) break;
   }
 
   const o2rating = parseInt(o2inputs[0], 2);
-  
-  // Compute CO2 Scrubber rating
-  let co2inputs = input;
-
-  while (co2inputs.length > 1) {
-    for (let bitPos = 0; bitPos < input[0].length; bitPos++) {
-      const { numberOfZeroes, numberOfOnes } = getNumberOfBits(co2inputs, bitPos);
-
-      if (numberOfOnes >= numberOfZeroes) {
-        co2inputs = co2inputs.filter((bits) => bits[bitPos] == "0");
-      } else {
-        co2inputs = co2inputs.filter((bits) => bits[bitPos] == "1");
-      }
-  
-      if (co2inputs.length == 1)
-        break;
-    }
-  }
 
   const co2rating = parseInt(co2inputs[0], 2);
 
