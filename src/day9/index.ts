@@ -26,7 +26,9 @@ const isLowPoint = (
   const left = x > 0 && map[y][x - 1];
   const right = x < map[0].length - 1 && map[y][x + 1];
 
-  return [up, down, left, right].filter(n => typeof n === "number").every(n => value < n);
+  return [up, down, left, right]
+    .filter((n) => typeof n === "number")
+    .every((n) => value < n);
 };
 
 const executePart1 = (input: ParsedInput): string => {
@@ -39,8 +41,59 @@ const executePart1 = (input: ParsedInput): string => {
   return `${riskLvl}`;
 };
 
+const isTopEdge = ([x, y]: Point) => y === 0;
+const isBotEdge = ([x, y]: Point, mapHeight: number) => y === mapHeight - 1;
+const isLeftEdge = ([x, y]: Point) => x === 0;
+const isRightEdge = ([x, y]: Point, mapWidth: number) => x === mapWidth - 1;
+
+const findBasinSize = (
+  [x, y]: Point,
+  map: ParsedInput,
+  visitedMap: boolean[][]
+) => {
+  let basinSize = 0;
+
+  if (visitedMap[y][x]) return basinSize;
+
+  visitedMap[y][x] = true;
+
+  if (map[y][x] !== 9) {
+    // Go Top
+    if (!isTopEdge([x, y]))
+      basinSize += findBasinSize([x, y - 1], map, visitedMap);
+
+    // Go Left
+    if (!isLeftEdge([x, y]))
+      basinSize += findBasinSize([x - 1, y], map, visitedMap);
+
+    // Go Down
+    if (!isBotEdge([x, y], map.length))
+      basinSize += findBasinSize([x, y + 1], map, visitedMap);
+
+    // Go Right
+    if (!isRightEdge([x, y], map[y].length))
+      basinSize += findBasinSize([x + 1, y], map, visitedMap);
+
+    ++basinSize;
+  }
+
+  return basinSize;
+};
+
 const executePart2 = (input: ParsedInput): string => {
-  return "";
+  const visitedMap = input.map((rows) => rows.map((_) => false));
+
+  const basinSizes: number[] = [];
+  for (const [y, row] of input.entries()) {
+    for (const [x, _] of row.entries()) {
+      if (!visitedMap[y][x])
+        basinSizes.push(findBasinSize([x, y], input, visitedMap));
+    }
+  }
+
+  basinSizes.sort((a, b) => b - a);
+
+  return `${basinSizes[0] * basinSizes[1] * basinSizes[2]}`;
 };
 
 const day9: AOCDay = async () => {
