@@ -12,5 +12,10 @@ If you intend to use it you should set an env var in the shape of `SESSION_COOKI
 ## Usage
 `npm run start`. Don't forget to install dependencies first, you fool!
 
+You can also pass a num argument to start to run only that day:
+```
+npm run start -- 2
+```
+
 </br>
 Made with ♥ and NodeJS
