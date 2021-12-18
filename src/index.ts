@@ -4,9 +4,18 @@ import { promises } from "fs";
 const main = async () => {
   const dirs = await promises.readdir("./dist", { withFileTypes: true });
 
+  const dayNum = process.argv[2];
+
+  if (dayNum && isNaN(parseInt(dayNum)))
+    throw new Error("Argument is not a number");
+
   const days: AOCModule[] = await Promise.all(
     dirs
-      .filter((d) => d.isDirectory() && d.name.startsWith("day"))
+      .filter((d) =>
+        d.isDirectory() && dayNum
+          ? d.name === `day${dayNum}`
+          : d.name.startsWith("day")
+      )
       .map((d) => import(`./${d.name}/index.js`))
   );
 
