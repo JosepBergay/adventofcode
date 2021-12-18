@@ -1,11 +1,16 @@
 import type { AOCDay } from "../types";
+import {
+  isBotEdge,
+  isLeftEdge,
+  isRightEdge,
+  isTopEdge,
+  Point,
+} from "../gridUtils.js";
 import { fetchInput } from "../helpers.js";
 
 const level = 9;
 
 type ParsedInput = number[][];
-
-type Point = [number, number];
 
 const parser = (input: string): ParsedInput =>
   input
@@ -40,11 +45,6 @@ const executePart1 = (input: ParsedInput): string => {
   }
   return `${riskLvl}`;
 };
-
-const isTopEdge = ([x, y]: Point) => y === 0;
-const isBotEdge = ([x, y]: Point, mapHeight: number) => y === mapHeight - 1;
-const isLeftEdge = ([x, y]: Point) => x === 0;
-const isRightEdge = ([x, y]: Point, mapWidth: number) => x === mapWidth - 1;
 
 const findBasinSize = (
   [x, y]: Point,
