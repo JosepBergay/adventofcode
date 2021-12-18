@@ -13,8 +13,16 @@ If you intend to use it you should set an env var in the shape of `SESSION_COOKI
 `npm run start`. Don't forget to install dependencies first, you fool!
 
 You can also pass a num argument to start to run only that day:
+
 ```
-npm run start -- 2
+npm run start 2
+
+...
+
+start Running Day 2
+✔ Done in 495 ms
+ℹ Answer:
+ℹ Day #2 part1: 1882980, part2: 1971232560
 ```
 
 </br>
