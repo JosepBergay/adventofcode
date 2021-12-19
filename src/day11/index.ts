@@ -1,6 +1,7 @@
 import type { AOCDay } from "../types";
 import { fetchInput } from "../helpers.js";
 import {
+  copyGrid,
   isBotEdge,
   isLeftEdge,
   isRightEdge,
@@ -90,27 +91,41 @@ const resetFlashed = (dumboGrid: ParsedInput) => {
   }
 };
 
+const executeStep = (dumboGrid: ParsedInput) => {
+  // First increase energy by 1.
+  increaseEnergyByOne(dumboGrid);
+
+  // Then, flash and increase energy
+  const flashCount = flashAndIncrease(dumboGrid);
+
+  // Finally, reset those that flashed
+  resetFlashed(dumboGrid);
+
+  return flashCount;
+};
+
 const executePart1 = (input: ParsedInput): string => {
-  const dumboGrid = input.map((row) => row.slice());
+  const dumboGrid = copyGrid(input, (d) => ({ ...d }));
 
   let flashCount = 0;
 
   for (let step = 0; step < 100; step++) {
-    // First increase energy by 1.
-    increaseEnergyByOne(dumboGrid);
-
-    // Then, flash and increase energy
-    flashCount += flashAndIncrease(dumboGrid);
-
-    // Finally, reset those that flashed
-    resetFlashed(dumboGrid);
+    flashCount += executeStep(dumboGrid);
   }
 
   return `${flashCount}`;
 };
 
 const executePart2 = (input: ParsedInput): string => {
-  return "";
+  const dumboGrid = copyGrid(input, (d) => ({ ...d }));
+
+  let step = 0;
+  do {
+    executeStep(dumboGrid);
+    step++;
+  } while (!dumboGrid.every((row) => row.every((d) => !d.energy)));
+
+  return `${step}`;
 };
 
 const day11: AOCDay = async () => {
