@@ -1,5 +1,6 @@
 import type { AOCDay } from "../types";
 import { fetchInput } from "../helpers.js";
+import { logGrid } from "../gridUtils.js";
 
 const level = 12;
 
@@ -20,35 +21,60 @@ const isBigCave = (cave: string) => !isSmallCave(cave);
 const start = "start";
 const end = "end";
 
-const getNextCave = (lastCave: string, link: Link) =>
-  lastCave === link[0] ? link[1] : lastCave === link[1] ? link[0] : undefined;
+const getNextCave = (
+  lastCave: string,
+  link: Link,
+  isNextCave: (nextCave: string) => boolean
+) => {
+  const nextCave =
+    lastCave === link[0] ? link[1] : lastCave === link[1] ? link[0] : undefined;
+  return nextCave && isNextCave(nextCave) ? nextCave : undefined;
+};
 
-const visitedSmallCave = (cave: string, current: string[]) =>
-  isSmallCave(cave) && current.includes(cave);
+const notVisitedSmallCave = (cave: string, current: string[]) =>
+  isBigCave(cave) || !current.includes(cave);
 
-const computePaths = (current: string[], links: Link[]): string[][] => {
+const noSmallCaveVisitedTwice = (current: string[]) => {
+  const smallCaves = current.filter(isSmallCave);
+  const repeated = smallCaves.filter(
+    (c1) => smallCaves.filter((c2) => c2 === c1).length === 2
+  );
+  return repeated.length === 0;
+};
+
+const notVisitedTooManySmallCaves = (cave: string, current: string[]) =>
+  notVisitedSmallCave(cave, current) ||
+  (cave !== start && noSmallCaveVisitedTwice(current));
+
+const computePaths = (
+  current: string[],
+  links: Link[],
+  isNextCave: (nextCave: string, currentPath: string[]) => boolean
+): string[][] => {
   const lastCave = current[current.length - 1];
   if (lastCave === end) {
     return [current];
   }
   const newPaths: string[][] = [];
   for (const link of links) {
-    const nextCave = getNextCave(lastCave, link);
-    if (nextCave && !visitedSmallCave(nextCave, current)) {
-      newPaths.push(...computePaths([...current, nextCave], links));
+    const nextCave = getNextCave(lastCave, link, (c) => isNextCave(c, current));
+    if (nextCave) {
+      newPaths.push(...computePaths([...current, nextCave], links, isNextCave));
     }
   }
   return newPaths;
 };
 
 const executePart1 = (input: ParsedInput): string => {
-  const paths = computePaths([start], input);
+  const paths = computePaths([start], input, notVisitedSmallCave);
 
   return `${paths.length}`;
 };
 
 const executePart2 = (input: ParsedInput): string => {
-  return "";
+  const paths = computePaths([start], input, notVisitedTooManySmallCaves);
+
+  return `${paths.length}`;
 };
 
 const day12: AOCDay = async () => {
