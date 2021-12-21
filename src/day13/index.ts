@@ -1,6 +1,6 @@
 import type { AOCDay } from "../types";
 import { fetchInput } from "../helpers.js";
-import { logGrid, Point } from "../gridUtils.js";
+import { buildGrid, logGrid, Point } from "../gridUtils.js";
 
 const level = 13;
 
@@ -61,42 +61,7 @@ const foldUp = (points: Point[], x_axis: number) => {
   return removeRepeated(top);
 };
 
-const executePart1 = (input: ParsedInput) => {
-  let [points, instructions] = input;
-
-  for (const instr of [instructions[0]]) {
-    if (instr.dir === "x") {
-      points = foldLeft(points, instr.value);
-    } else {
-      points = foldUp(points, instr.value);
-    }
-  }
-
-  return points.length;
-};
-
-const buildGrid = (points: Point[]) => {
-  const max_x = points.reduce((max, [x, _]) => (x > max ? x : max), 0);
-  const max_y = points.reduce((max, [_, y]) => (y > max ? y : max), 0);
-
-  const grid: string[][] = [];
-  for (let y = 0; y < max_y + 1; y++) {
-    const row = [];
-    for (let x = 0; x < max_x + 1; x++) {
-      row.push(".");
-    }
-    grid.push(row);
-  }
-
-  for (const [x, y] of points) {
-    grid[y][x] = "#";
-  }
-  return grid;
-};
-
-const executePart2 = (input: ParsedInput) => {
-  let [points, instructions] = input;
-
+const foldRecursive = (points: Point[], instructions: FoldInstructions[]) => {
   for (const instr of instructions) {
     if (instr.dir === "x") {
       points = foldLeft(points, instr.value);
@@ -104,8 +69,23 @@ const executePart2 = (input: ParsedInput) => {
       points = foldUp(points, instr.value);
     }
   }
+  return points;
+};
 
-  const grid = buildGrid(points);
+const executePart1 = (input: ParsedInput) => {
+  let [points, instructions] = input;
+
+  points = foldRecursive(points, [instructions[0]]);
+
+  return points.length;
+};
+
+const executePart2 = (input: ParsedInput) => {
+  let [points, instructions] = input;
+
+  points = foldRecursive(points, instructions);
+
+  const grid = buildGrid(points, "#", ".");
 
   logGrid(grid, "Transparent Origami");
 
