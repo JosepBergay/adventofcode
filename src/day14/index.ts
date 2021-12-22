@@ -79,7 +79,50 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  const map = new Map<string, number>();
+  const charMap = new Map<string, number>();
+
+  // Fill initial maps.
+  for (const pair of input.templatePairs) {
+    map.set(pair, (map.get(pair) ?? 0) + 1);
+    const [first, _] = pair.split("");
+    charMap.set(first, (charMap.get(first) ?? 0) + 1);
+  }
+
+  // Insert last char of last pair (last char of template).
+  const [_, last] = input.templatePairs[input.templatePairs.length - 1];
+  charMap.set(last, (charMap.get(last) ?? 0) + 1);
+
+  for (let step = 0; step < 40; step++) {
+    const iteratingMap = new Map(map.entries()); // Can't modify the same map we are iterating. Lesson learned!
+    for (const [pair, counter] of iteratingMap) {
+      const rule = input.rules.find(([p, _]) => p === pair);
+
+      if (rule) {
+        const insertedChar = rule[1];
+        const newPair1 = `${pair[0]}${insertedChar}`;
+        const newPair2 = `${insertedChar}${pair[1]}`;
+
+        map.set(pair, map.get(pair)! - counter);
+        map.set(newPair1, (map.get(newPair1) ?? 0) + counter);
+        map.set(newPair2, (map.get(newPair2) ?? 0) + counter);
+        charMap.set(insertedChar, (charMap.get(insertedChar) ?? 0) + counter);
+      }
+    }
+  }
+
+  let most = { key: "", value: 0 };
+  let least = { key: "", value: Infinity };
+  for (const [char, counter] of charMap) {
+    if (most.value < counter) {
+      most = { key: char, value: counter };
+    }
+    if (least.value > counter) {
+      least = { key: char, value: counter };
+    }
+  }
+
+  return most.value - least.value;
 };
 
 const day14: AOCDay = async () => {
