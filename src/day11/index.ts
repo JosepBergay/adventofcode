@@ -1,13 +1,6 @@
 import type { AOCDay } from "../types";
 import { fetchInput } from "../helpers.js";
-import {
-  copyGrid,
-  isBotEdge,
-  isLeftEdge,
-  isRightEdge,
-  isTopEdge,
-  Point,
-} from "../gridUtils.js";
+import { copyGrid, getAdjacents } from "../gridUtils.js";
 
 const level = 11;
 
@@ -34,34 +27,6 @@ const increaseEnergyByOne = (dumboGrid: ParsedInput) => {
   }
 };
 
-const createAdjacentGrid = ([x, y]: Point, dumboGrid: ParsedInput) => {
-  const notLeftEdge = !isLeftEdge([x, y]);
-  const notRightEdge = !isRightEdge([x, y], dumboGrid[y].length);
-  const adjacents: Dumbo[][] = [];
-
-  if (!isTopEdge([x, y])) {
-    const topRow: Dumbo[] = [];
-    topRow.push(dumboGrid[y - 1][x]);
-    if (notLeftEdge) topRow.push(dumboGrid[y - 1][x - 1]);
-    if (notRightEdge) topRow.push(dumboGrid[y - 1][x + 1]);
-    adjacents.push(topRow);
-  }
-
-  const midRow: Dumbo[] = [];
-  if (notLeftEdge) midRow.push(dumboGrid[y][x - 1]);
-  if (notRightEdge) midRow.push(dumboGrid[y][x + 1]);
-  adjacents.push(midRow);
-
-  if (!isBotEdge([x, y], dumboGrid.length)) {
-    const botRow: Dumbo[] = [];
-    botRow.push(dumboGrid[y + 1][x]);
-    if (notLeftEdge) botRow.push(dumboGrid[y + 1][x - 1]);
-    if (notRightEdge) botRow.push(dumboGrid[y + 1][x + 1]);
-    adjacents.push(botRow);
-  }
-  return adjacents;
-};
-
 const flashAndIncrease = (dumboGrid: Dumbo[][]) => {
   let flashCount = 0;
   for (const [y, dumboRow] of dumboGrid.entries()) {
@@ -69,8 +34,8 @@ const flashAndIncrease = (dumboGrid: Dumbo[][]) => {
       if (dumbo.energy > 9 && !dumbo.hasFlashed) {
         dumbo.hasFlashed = true;
         flashCount++;
-        const adjacent = createAdjacentGrid([x, y], dumboGrid);
-        increaseEnergyByOne(adjacent);
+        const adjacents = getAdjacents([x, y], dumboGrid, true);
+        increaseEnergyByOne([adjacents.map((a) => a[1])]);
       }
     }
   }
