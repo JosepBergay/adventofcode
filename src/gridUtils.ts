@@ -73,3 +73,8 @@ export const getAdjacents = <T>(
 
   return adjacents.map(([x, y]) => [[x, y], grid[y][x]] as [Point, T]);
 };
+
+export const gridToPoints = <T>(grid: Grid<T>) =>
+  grid.flatMap((row, y) => row.map((_, x) => [x, y] as Point));
+
+export const pointToStr = (p: Point) => `${p[0]},${p[1]}`;
