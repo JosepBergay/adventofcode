@@ -80,7 +80,20 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  const start: Point = [0, 0];
+
+  const validTrajectories: { trajectory: Point[]; v0: Point }[] = [];
+  // To get all inital velocities we can brute force the solution. Vx is still positive.
+  for (let vx = 0; vx <= input.maxX; vx++) {
+    for (let vy = input.minY; vy <= Math.abs(input.minY); vy++) {
+      const trajectory = computeTrajectory(start, [vx, vy], input);
+      if (trajectory) {
+        validTrajectories.push({ trajectory, v0: [vx, vy] });
+      }
+    }
+  }
+
+  return validTrajectories.length;
 };
 
 const day17: AOCDay = async () => {
