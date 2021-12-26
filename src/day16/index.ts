@@ -64,7 +64,7 @@ const parseOperatorPacketBody = (
     // Next 15 bits are a number that represents the total length in bits of the sub-packets contained.
     const subPacketsLength = bitsToInt(rest.slice(0, 15).join(""));
     const subPacketsStr = rest.slice(15, 15 + subPacketsLength).join("");
-    
+
     const subPackets: Packet[] = [];
     let subPacketLeftovers = subPacketsStr;
     while (subPacketLeftovers.length >= MIN_PACKET_LEN) {
@@ -125,6 +125,29 @@ const computeVersionSum = (packet: Packet) => {
   return version;
 };
 
+const computeValue = (packet: Packet): number => {
+  if (packet.typeId === 4) return packet.value!;
+  const subValues = packet.subPackets!.map(computeValue);
+  switch (packet.typeId) {
+    case 0:
+      return subValues.reduce((p, c) => p + c);
+    case 1:
+      return subValues.reduce((p, c) => p * c);
+    case 2:
+      return Math.min(...subValues);
+    case 3:
+      return Math.max(...subValues);
+    case 5:
+      return subValues[0] > subValues[1] ? 1 : 0;
+    case 6:
+      return subValues[0] < subValues[1] ? 1 : 0;
+    case 7:
+      return subValues[0] === subValues[1] ? 1 : 0;
+    default:
+      throw new Error(`Type Id ${packet.typeId} without rule`)
+  }
+};
+
 const executePart1 = (input: ParsedInput) => {
   const main = parsePacket(input);
 
@@ -134,7 +157,11 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  const packet = parsePacket(input);
+
+  const value = computeValue(packet);
+
+  return value;
 };
 
 const day16: AOCDay = async () => {
