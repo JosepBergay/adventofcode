@@ -208,8 +208,20 @@ const executePart1 = (input: ParsedInput) => {
   return computeMagnitude(addition);
 };
 
-const executePart2 = (input: ParsedInput) => {
-  return "";
+const executePart2 = (input: SnailFishNum[]) => {
+  let largest = 0;
+  for (const sfNum of input) {
+    for (const sfNum2 of input) {
+      // Building trees each time, because they are mutated during sum.
+      const sum = add(buildTree(sfNum), buildTree(sfNum2));
+      const mag = computeMagnitude(sum);
+      if (mag > largest) {
+        largest = mag;
+      }
+    }
+  }
+
+  return largest;
 };
 
 const day18: AOCDay = async () => {
@@ -217,9 +229,9 @@ const day18: AOCDay = async () => {
 
   const parsed = parser(input);
 
-  const part1 = `${executePart1(parsed)}`;
+  const part1 = `${executePart1(parsed.map(treeToArray).map(buildTree))}`;
 
-  const part2 = `${executePart2(parsed)}`;
+  const part2 = `${executePart2(parsed.map(treeToArray))}`;
 
   return { level, part1, part2 };
 };
