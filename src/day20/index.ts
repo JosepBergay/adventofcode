@@ -54,6 +54,22 @@ const countLitPixels = (grid: Grid<Pixel>) => {
   return litPixels;
 };
 
+const parseImageMultipleTimes = (
+  input: ParsedInput,
+  infinityValue: Pixel,
+  steps: number
+) => {
+  let parsedImage: Grid<Pixel> = input.image;
+  let infValue = infinityValue;
+  for (let i = 0; i < steps; i++) {
+    parsedImage = parseImage(parsedImage, input.algorithm, infValue);
+    // const int = pixelsToInt(new Array(9).fill(infValue));
+    // Instead of computing int each time, we know it's either 0 or 511.
+    infValue = input.algorithm[infValue === "." ? 0 : 511] as Pixel;
+  }
+  return parsedImage;
+};
+
 const executePart1 = (input: ParsedInput) => {
   // First time infinity value is "."
   const infinityValue = ".";
@@ -71,7 +87,11 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  const parsed = parseImageMultipleTimes(input, ".", 50);
+
+  const count = countLitPixels(parsed);
+
+  return count;
 };
 
 const day20: AOCDay = async () => {
