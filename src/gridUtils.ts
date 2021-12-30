@@ -21,7 +21,7 @@ export const logGrid = <T>(
   valueMapper?: (v: T) => any
 ) =>
   console.log(
-    prefix,
+    prefix || "",
     grid.map((row) => (valueMapper ? row.map(valueMapper).join() : row.join()))
   );
 
@@ -45,6 +45,22 @@ export const buildGrid = <T>(points: Point[], value: T, emptyValue: T) => {
     grid[y][x] = value;
   }
   return grid;
+};
+
+export const getAdjacentsInfinity = <T>(
+  [x, y]: Point,
+  grid: Grid<T>,
+  defaultValue: T
+) => {
+  const adjacents: Point[] = [];
+  // Top Row
+  adjacents.push([x - 1, y - 1], [x, y - 1], [x + 1, y - 1]);
+  // Mid Row
+  adjacents.push([x - 1, y], [x + 1, y]);
+  // Bot Row
+  adjacents.push([x - 1, y + 1], [x, y + 1], [x + 1, y + 1]);
+
+  return adjacents.map(([x, y]) => (grid[y] && grid[y][x]) ?? defaultValue);
 };
 
 export const getAdjacents = <T>(
