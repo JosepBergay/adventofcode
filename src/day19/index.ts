@@ -146,16 +146,16 @@ const logScanner = (scanner: Scanner) => {
   console.log(`Position: ${scanner.position}`);
 };
 
+const store: Record<number, Scanner> = {};
+
 const analyzeScanners = (scanners: ParsedInput) => {
   // Use first scanner as reference.
-  const store: Record<number, Scanner> = {
-    0: {
-      name: 0,
-      overlapsWith: [],
-      position: [0, 0, 0],
-      transformedBeacons: scanners[0],
-      transformTo0: (v) => v,
-    },
+  store[0] = {
+    name: 0,
+    overlapsWith: [],
+    position: [0, 0, 0],
+    transformedBeacons: scanners[0],
+    transformTo0: (v) => v,
   };
 
   const analysisQueue = [0];
@@ -166,7 +166,7 @@ const analyzeScanners = (scanners: ParsedInput) => {
 
     for (const [i, beaconsB] of scanners.entries()) {
       if (i === current || store[i]) continue; // skip self and already analyzed.
-      console.log(current, i);
+
       const [matches, rotationIdx] = findOverlapping(beaconsA, beaconsB);
 
       if (matches) {
@@ -198,7 +198,7 @@ const findUniqueBeacons = (scanners: ParsedInput) => {
   for (const key in scannerStore) {
     const scanner = scannerStore[key];
     scanner.transformedBeacons.forEach((b) => unique.add(b.toString()));
-    logScanner(scanner);
+    // logScanner(scanner);
   }
   return unique;
 };
@@ -210,7 +210,23 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  let maxManhattanDistance = 0;
+
+  // Reusing store from part1.
+  for (const key in store) {
+    const [x, y, z] = store[key].position;
+    for (const key2 in store) {
+      if (key >= key2) continue; // skip self and repeated
+
+      const [x2, y2, z2] = store[key2].position;
+
+      const computed = Math.abs(x - x2) + Math.abs(y - y2) + Math.abs(z - z2);
+
+      maxManhattanDistance = Math.max(maxManhattanDistance, computed);
+    }
+  }
+
+  return maxManhattanDistance;
 };
 
 const day19: AOCDay = async () => {
