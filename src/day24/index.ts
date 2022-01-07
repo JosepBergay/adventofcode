@@ -1,5 +1,6 @@
 import type { AOCDay } from "../types";
 import { fetchInput } from "../helpers.js";
+import { executeSmart, executeSmart2 } from "./helpers.js";
 
 const level = 24;
 
@@ -146,23 +147,7 @@ const executeSection = (
   return [alu.get("w"), alu.get("x"), alu.get("y"), alu.get("z")];
 };
 
-const cache = new Map<string, IntVars>();
-
-const getOrExecSection = (
-  input: number,
-  intVars: IntVars,
-  instructions: Instruction[],
-  currentSection: number
-) => {
-  // Map key is currentSection + input + intVars
-  const key = `${currentSection},${input},${intVars}`;
-  if (cache.has(key)) {
-    console.log("hit cache!");
-    return cache.get(key)!;
-  }
-  return executeSection(input, intVars, instructions);
-};
-
+// 2secs 10M iterations
 const executeSectionRec = (
   intVars: IntVars,
   sections: Instruction[][],
@@ -187,24 +172,26 @@ const executeSectionRec = (
 const bruteForce = (input: ParsedInput) =>
   executeSectionRec([0, 0, 0, 0], input, 0);
 
-const executePart1 = (input: ParsedInput) => {
-  const highestModelNum = bruteForce(input);
+const executePart1 = (input: string) => {
+  const highestModelNum = executeSmart(input);
 
   return highestModelNum;
 };
 
-const executePart2 = (input: ParsedInput) => {
-  return "";
+const executePart2 = (input: string) => {
+  const smallestModelNum = executeSmart2(input);
+
+  return smallestModelNum;
 };
 
 const day24: AOCDay = async () => {
   const input = await fetchInput(level);
 
-  const parsed = parser(input);
+  //   const parsed = parser(input);
 
-  const part1 = `${executePart1(parsed)}`;
+  const part1 = `${executePart1(input)}`;
 
-  const part2 = `${executePart2(parsed)}`;
+  const part2 = `${executePart2(input)}`;
 
   return { level, part1, part2 };
 };
