@@ -78,7 +78,7 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  return "🎉";
 };
 
 const day25: AOCDay = async () => {
