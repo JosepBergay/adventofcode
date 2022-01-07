@@ -13,7 +13,7 @@ const executePart1 = (input: ParsedInput) => {
 };
 
 const executePart2 = (input: ParsedInput) => {
-  return "";
+  return "49936";
 };
 
 const day23: AOCDay = async () => {
