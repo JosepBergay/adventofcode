@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 const getSession = () => {
   if (!process.env.SESSION_COOKIE) throw "NO COOKIE :<";
   return process.env.SESSION_COOKIE!;
