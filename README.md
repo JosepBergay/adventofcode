@@ -9,7 +9,31 @@ The aim of this repo is to share my aoc exercises, maybe we can comment them up,
 ## Instructions
 If you intend to use it you should set an env var in the shape of `SESSION_COOKIE=123-replace-with-yours` containing the session id so it can properly fetch all inputs. You can grab yours from https://adventofcode.com/ once logged in (devtools ftw!). 
 
-## Usage
+## 2022
+
+### Build
+
+```bash
+go build
+```
+
+### Run
+
+E.g.:
+```bash
+adventofcode 1 2 # Will run day 1 and 2
+```
+
+### Development
+
+[air](https://github.com/cosmtrek/air) is used for hot reload so you can just do:
+```bash
+air 1 2 # Will run day 1 and 2 each time you save a file
+```
+
+## 2021
+
+### Usage
 `npm run start`. Don't forget to install dependencies first, you fool!
 
 You can also pass a num argument to start to run only that day:
@@ -26,4 +50,4 @@ start Running Day 2
 ```
 
 </br>
-Made with ♥ and NodeJS
+Made with ♥, NodeJS and Golang
