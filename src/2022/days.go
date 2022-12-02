@@ -12,8 +12,6 @@ type DayResult struct {
 }
 
 type Day interface {
-	Day() int
-
 	Exec(input string) (*DayResult, error)
 }
 

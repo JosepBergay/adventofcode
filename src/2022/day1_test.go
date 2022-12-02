@@ -2,7 +2,7 @@ package aoc2022
 
 import "testing"
 
-const input = `1000
+const inputD1 = `1000
 2000
 3000
 
@@ -18,12 +18,12 @@ const input = `1000
 10000
 `
 
-const expectedP1 = "24000"
+const expectedD1P1 = "24000"
 
 func TestDay1Part1(t *testing.T) {
-	day := &day{}
+	day := &day1{}
 
-	parsed, err := day.Parse(input)
+	parsed, err := day.Parse(inputD1)
 
 	if err != nil {
 		t.Errorf("[Parse]: %v", err.Error())
@@ -37,17 +37,17 @@ func TestDay1Part1(t *testing.T) {
 		return
 	}
 
-	if res != expectedP1 {
-		t.Errorf("Expected: %v \nBut got: %v", expectedP1, res)
+	if res != expectedD1P1 {
+		t.Errorf("Expected: %v \nBut got: %v", expectedD1P1, res)
 	}
 }
 
-const expectedP2 = "45000"
+const expectedD1P2 = "45000"
 
 func TestDay1Part2(t *testing.T) {
-	day := &day{}
+	day := &day1{}
 
-	parsed, err := day.Parse(input)
+	parsed, err := day.Parse(inputD1)
 
 	if err != nil {
 		t.Errorf("[Parse]: %v", err.Error())
@@ -61,7 +61,7 @@ func TestDay1Part2(t *testing.T) {
 		return
 	}
 
-	if res != expectedP2 {
-		t.Errorf("Expected: %v \nBut got: %v", expectedP2, res)
+	if res != expectedD1P2 {
+		t.Errorf("Expected: %v \nBut got: %v", expectedD1P2, res)
 	}
 }

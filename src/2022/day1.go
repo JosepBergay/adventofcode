@@ -5,19 +5,13 @@ import (
 	"strings"
 )
 
-const dayNum = 1
-
 func init() {
-	Days[dayNum] = &day{}
+	Days[1] = &day1{}
 }
 
-type day struct{}
+type day1 struct{}
 
-func (d *day) Day() int {
-	return dayNum
-}
-
-func (d *day) Parse(input string) ([][]int, error) {
+func (d *day1) Parse(input string) ([][]int, error) {
 	strGroups := strings.Split(input, "\n\n")
 
 	intGroups := make([][]int, len(strGroups))
@@ -41,7 +35,7 @@ func (d *day) Parse(input string) ([][]int, error) {
 	return intGroups, nil
 }
 
-func (d *day) Part1(elves [][]int) (string, error) {
+func (d *day1) Part1(elves [][]int) (string, error) {
 	most := 0
 
 	for _, elf := range elves {
@@ -59,7 +53,7 @@ func (d *day) Part1(elves [][]int) (string, error) {
 	return strconv.Itoa(most), nil
 }
 
-func (d *day) Part2(elves [][]int) (string, error) {
+func (d *day1) Part2(elves [][]int) (string, error) {
 	// Highest is last
 	top3 := [3]int{}
 
@@ -91,7 +85,7 @@ func (d *day) Part2(elves [][]int) (string, error) {
 	return strconv.Itoa(sum), nil
 }
 
-func (d *day) Exec(input string) (*DayResult, error) {
+func (d *day1) Exec(input string) (*DayResult, error) {
 	parsed, err := d.Parse(input)
 
 	if err != nil {
