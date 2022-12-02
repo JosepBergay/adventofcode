@@ -23,31 +23,31 @@ func (d *day) Parse(input string) ([][]int, error) {
 	intGroups := make([][]int, len(strGroups))
 
 	for i, v := range strGroups {
-		strCalories := strings.Split(v, "\n")
+		strLines := strings.Split(v, "\n")
 
-		intCalories := make([]int, len(strCalories))
-		for j, v := range strCalories {
-			foodCalories, err := strconv.Atoi(v)
+		intLines := make([]int, len(strLines))
+		for j, v := range strLines {
+			value, err := strconv.Atoi(v)
 
 			if err != nil {
 				continue
 			}
 
-			intCalories[j] = foodCalories
+			intLines[j] = value
 		}
 
-		intGroups[i] = intCalories
+		intGroups[i] = intLines
 	}
 	return intGroups, nil
 }
 
-func (d *day) Part1(groups [][]int) (string, error) {
+func (d *day) Part1(elves [][]int) (string, error) {
 	most := 0
 
-	for _, calories := range groups {
+	for _, elf := range elves {
 		curr := 0
 
-		for _, v := range calories {
+		for _, v := range elf {
 			curr += v
 		}
 
@@ -60,6 +60,13 @@ func (d *day) Part1(groups [][]int) (string, error) {
 }
 
 func (d *day) Part2(parsed [][]int) (string, error) {
+
+	for _, elf := range parsed {
+		for _, calories := range elf {
+
+		}
+	}
+
 	return "TODO", nil
 }
 
