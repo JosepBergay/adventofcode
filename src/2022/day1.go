@@ -59,15 +59,36 @@ func (d *day) Part1(elves [][]int) (string, error) {
 	return strconv.Itoa(most), nil
 }
 
-func (d *day) Part2(parsed [][]int) (string, error) {
+func (d *day) Part2(elves [][]int) (string, error) {
+	// Highest is last
+	top3 := [3]int{}
 
-	for _, elf := range parsed {
-		for _, calories := range elf {
-
+	sort := func() {
+		for i := 0; i < 2; i++ {
+			if top3[i] > top3[i+1] {
+				top3[i], top3[i+1] = top3[i+1], top3[i]
+			}
 		}
 	}
 
-	return "TODO", nil
+	for _, elf := range elves {
+		total := 0
+		for _, calories := range elf {
+			total += calories
+		}
+
+		if top3[0] < total {
+			top3[0] = total
+			sort()
+		}
+	}
+
+	sum := 0
+	for _, v := range top3 {
+		sum += v
+	}
+
+	return strconv.Itoa(sum), nil
 }
 
 func (d *day) Exec(input string) (*DayResult, error) {
