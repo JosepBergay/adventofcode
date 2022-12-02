@@ -6,12 +6,15 @@ import (
 	"net/http"
 )
 
+type DayResult struct {
+	Part1 string
+	Part2 string
+}
+
 type Day interface {
 	Day() int
 
-	Parse(input string) (string, error)
-
-	Exec(parsed string) (string, error)
+	Exec(input string) (*DayResult, error)
 }
 
 var Days = make(map[int]Day, 0)

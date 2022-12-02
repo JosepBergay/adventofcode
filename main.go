@@ -96,15 +96,7 @@ func runDay(dayNum int, cookie string, r responses) {
 		return
 	}
 
-	parsed, err := day.Parse(input)
-
-	if err != nil {
-		result.message = fmt.Sprintf("[Parse]: %v", err.Error())
-		r.errors <- result
-		return
-	}
-
-	res, err := day.Exec(parsed)
+	res, err := day.Exec(input)
 
 	if err != nil {
 		result.message = fmt.Sprintf("[Exec]: %v", err.Error())
@@ -112,6 +104,6 @@ func runDay(dayNum int, cookie string, r responses) {
 		return
 	}
 
-	result.message = res
+	result.message = fmt.Sprintf("[Part1]: %v, [Part2]: %v", res.Part1, res.Part2)
 	r.success <- result
 }
