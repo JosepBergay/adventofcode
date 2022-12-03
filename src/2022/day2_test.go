@@ -4,7 +4,8 @@ import "testing"
 
 const inputD2 = `A Y
 B X
-C Z`
+C Z
+`
 
 const expectedD2P1 = "15"
 
