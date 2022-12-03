@@ -50,7 +50,7 @@ func TestDay2Part2(t *testing.T) {
 		return
 	}
 
-	if res != expectedD1P2 {
+	if res != expectedD2P2 {
 		t.Errorf("Expected: %v \nBut got: %v", expectedD2P2, res)
 	}
 }
