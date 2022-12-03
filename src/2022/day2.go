@@ -27,11 +27,6 @@ func init() {
 			'Y': 2, // Paper
 			'Z': 3, // Scissors
 		},
-		outcome: map[string]int{
-			"lost": 0,
-			"draw": 3,
-			"win":  6,
-		},
 	}
 }
 
@@ -68,8 +63,36 @@ func (d *day2) Part1(rounds [][2]rune) (string, error) {
 	return fmt.Sprint(total), nil
 }
 
-func (d *day2) Part2(input [][2]rune) (string, error) {
-	return "TODO", nil
+func (d *day2) Part2(rounds [][2]rune) (string, error) {
+	total := 0
+
+	for _, round := range rounds {
+		opponent := rockPaperScissors.scores[round[0]]
+		result := round[1]
+
+		switch result {
+		case 'X':
+			// Lose
+			if opponent == 1 {
+				total += 3
+			} else {
+				total += opponent - 1
+			}
+		case 'Y':
+			// Draw
+			total += opponent + 3
+		case 'Z':
+			// Victory
+			total += 6
+			if opponent == 3 {
+				total += 1
+			} else {
+				total += opponent + 1
+			}
+		}
+	}
+
+	return fmt.Sprint(total), nil
 }
 
 func (d *day2) Exec(input string) (*DayResult, error) {
