@@ -156,7 +156,7 @@
             "\t\treturn",
             "\t}",
             "",
-            "\tif res != expectedD2P2 {",
+            "\tif res != expectedD$1P2 {",
             "\t\tt.Errorf(\"Expected: %v \\nBut got: %v\", expectedD$1P2, res)",
             "\t}",
             "}",
