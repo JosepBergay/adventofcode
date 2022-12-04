@@ -7,7 +7,8 @@ jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
 PmmdzqPrVvPwwTWBwg
 wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
 ttgJtRGJQctTZtZT
-CrZsJsPPZsGzwwsLwLmpwMDw`
+CrZsJsPPZsGzwwsLwLmpwMDw
+`
 
 const expectedD3P1 = "157"
 
@@ -33,7 +34,7 @@ func TestDay3Part1(t *testing.T) {
 	}
 }
 
-const expectedD3P2 = ""
+const expectedD3P2 = "70"
 
 func TestDay3Part2(t *testing.T) {
 	day := &day3{}
@@ -52,7 +53,7 @@ func TestDay3Part2(t *testing.T) {
 		return
 	}
 
-	if res != expectedD2P2 {
+	if res != expectedD3P2 {
 		t.Errorf("Expected: %v \nBut got: %v", expectedD3P2, res)
 	}
 }
