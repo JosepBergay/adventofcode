@@ -59,7 +59,15 @@ func (d *day4) Part1(input [][2][2]int) (string, error) {
 }
 
 func (d *day4) Part2(input [][2][2]int) (string, error) {
-	return "TODO", nil
+	out := 0
+
+	for _, v := range input {
+		if v[0][1] >= v[1][0] && v[0][0] <= v[1][0] || v[1][1] >= v[0][0] && v[1][0] <= v[0][0] {
+			out++
+		}
+	}
+
+	return fmt.Sprint(out), nil
 }
 
 func (d *day4) Exec(input string) (*DayResult, error) {

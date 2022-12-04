@@ -4,10 +4,13 @@ import "testing"
 
 const inputD4 = `2-4,6-8
 2-3,4-5
+5-7,4-6
 5-7,7-9
 2-8,3-7
 6-6,4-6
 2-6,4-8
+14-14,15-51
+15-51,14-14
 `
 
 const expectedD4P1 = "2"
@@ -34,7 +37,7 @@ func TestDay4Part1(t *testing.T) {
 	}
 }
 
-const expectedD4P2 = ""
+const expectedD4P2 = "5"
 
 func TestDay4Part2(t *testing.T) {
 	day := &day4{}
