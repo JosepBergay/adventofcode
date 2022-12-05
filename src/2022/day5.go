@@ -18,7 +18,7 @@ type instruction struct {
 }
 
 type day5state struct {
-	stacks       []*utils.Stack[string]
+	cargos       [][]string
 	instructions []*instruction
 }
 
@@ -105,42 +105,31 @@ func (d *day5) Parse(input string) (*day5state, error) {
 
 		for _, v := range values {
 			// Init stacks if needed
-			if len(state.stacks) <= v.stackId {
-				for i := len(state.stacks); i <= v.stackId; i++ {
-					state.stacks = append(state.stacks, &utils.Stack[string]{})
+			if len(state.cargos) <= v.stackId {
+				for i := len(state.cargos); i <= v.stackId; i++ {
+					state.cargos = append(state.cargos, make([]string, 0))
 				}
 			}
 
 			// Adding it on top, will have to reverse it afterwards :/
-			state.stacks[v.stackId].Push(v.value)
+			state.cargos[v.stackId] = append(state.cargos[v.stackId], v.value)
 		}
 	}
 
-	for _, stack := range state.stacks {
-		stack.Reverse()
+	// Reverse each cargo
+	for _, c := range state.cargos {
+		for i, j := 0, len(c)-1; i < j; i, j = i+1, j-1 {
+			c[i], c[j] = c[j], c[i]
+		}
 	}
 
 	return state, nil
 }
 
-func (d *day5) Part1(input *day5state) (string, error) {
-	for _, inst := range input.instructions {
-		origin := input.stacks[inst.from-1]
-		destination := input.stacks[inst.to-1]
+func computeStackOrder(stacks []*utils.Stack[string]) (string, error) {
+	out := make([]string, 0, len(stacks))
 
-		for i := 0; i < inst.move; i++ {
-			value, err := origin.Pop()
-			if err != nil {
-				return "", err
-			}
-
-			destination.Push(value)
-		}
-	}
-
-	out := make([]string, len(input.stacks))
-
-	for _, stack := range input.stacks {
+	for _, stack := range stacks {
 		value, err := stack.Pop()
 		if err != nil {
 			return "", err
@@ -152,8 +141,64 @@ func (d *day5) Part1(input *day5state) (string, error) {
 	return strings.Join(out, ""), nil
 }
 
+func populateStacks(cargos [][]string) []*utils.Stack[string] {
+	stacks := make([]*utils.Stack[string], len(cargos))
+	for i, c := range cargos {
+		stack := &utils.Stack[string]{}
+		for _, v := range c {
+			stack.Push(v)
+		}
+		stacks[i] = stack
+	}
+
+	return stacks
+}
+
+func (d *day5) Part1(input *day5state) (string, error) {
+	stacks := populateStacks(input.cargos)
+
+	for _, inst := range input.instructions {
+		origin := stacks[inst.from-1]
+		destination := stacks[inst.to-1]
+
+		for i := 0; i < inst.move; i++ {
+			value, err := origin.Pop()
+			if err != nil {
+				return "", err
+			}
+
+			destination.Push(value)
+		}
+	}
+
+	return computeStackOrder(stacks)
+}
+
 func (d *day5) Part2(input *day5state) (string, error) {
-	return "TODO", nil
+	stacks := populateStacks(input.cargos)
+
+	for _, inst := range input.instructions {
+		origin := stacks[inst.from-1]
+		destination := stacks[inst.to-1]
+
+		buf := make([]string, inst.move)
+
+		for i := 0; i < inst.move; i++ {
+			value, err := origin.Pop()
+			if err != nil {
+				return "", err
+			}
+
+			// Set it backwards to buffer
+			buf[inst.move-i-1] = value
+		}
+
+		for _, v := range buf {
+			destination.Push(v)
+		}
+	}
+
+	return computeStackOrder(stacks)
 }
 
 func (d *day5) Exec(input string) (*DayResult, error) {
