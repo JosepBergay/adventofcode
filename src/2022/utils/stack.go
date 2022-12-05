@@ -56,7 +56,7 @@ func (s *Stack[T]) Length() int {
 
 // Reverse will make items on top of the stack appear on bottom. This is not why stacks are made!
 func (s *Stack[T]) Reverse() {
-	items := make([]T, s.length)
+	items := make([]T, 0, s.length)
 
 	for s.tail != nil {
 		v, err := s.Pop()
