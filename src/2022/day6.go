@@ -15,8 +15,8 @@ func (d *day6) Parse(input string) (string, error) {
 	return input, nil
 }
 
-// isStartOfPacket returns true if candidate has no repeated values
-func isStartOfPacket(candidate []byte) bool {
+// isMarker returns true if candidate has no repeated values
+func isMarker(candidate []byte) bool {
 	m := make(map[byte]any)
 
 	for _, v := range candidate {
@@ -26,28 +26,32 @@ func isStartOfPacket(candidate []byte) bool {
 	return len(m) == len(candidate)
 }
 
-func (d *day6) Part1(input string) (string, error) {
+func findMarker(input string, markerLength int) (string, error) {
 	reader := strings.NewReader(input)
+
+	msg := make([]byte, markerLength)
 
 	i := 0
 	for {
-		msg := make([]byte, 4)
-
 		_, err := reader.ReadAt(msg, int64(i))
 		if err != nil {
 			return "", err
 		}
 
-		if isStartOfPacket(msg) {
-			return fmt.Sprint(i + 4), nil
+		if isMarker(msg) {
+			return fmt.Sprint(i + markerLength), nil
 		}
 
 		i++
 	}
 }
 
+func (d *day6) Part1(input string) (string, error) {
+	return findMarker(input, 4)
+}
+
 func (d *day6) Part2(input string) (string, error) {
-	return "TODO", nil
+	return findMarker(input, 14)
 }
 
 func (d *day6) Exec(input string) (*DayResult, error) {
