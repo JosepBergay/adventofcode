@@ -134,8 +134,28 @@ func (d *day7) Part1(root *fileTree) (string, error) {
 	return fmt.Sprint(out), nil
 }
 
-func (d *day7) Part2(input *fileTree) (string, error) {
-	return "TODO", nil
+func findSmallestDirSpace(node *fileTree, minSpace, currentSmallest int) int {
+	if !node.isDir {
+		return currentSmallest
+	}
+
+	for _, child := range node.children {
+		currentSmallest = findSmallestDirSpace(child, minSpace, currentSmallest)
+	}
+
+	if node.size > minSpace && node.size < currentSmallest {
+		return node.size
+	}
+
+	return currentSmallest
+}
+
+func (d *day7) Part2(root *fileTree) (string, error) {
+	missingSpace := root.size + 30_000_000 - 70_000_000
+
+	out := findSmallestDirSpace(root, missingSpace, root.size)
+
+	return fmt.Sprint(out), nil
 }
 
 func (d *day7) Exec(input string) (*DayResult, error) {

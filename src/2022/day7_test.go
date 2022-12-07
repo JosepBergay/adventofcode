@@ -51,7 +51,7 @@ func TestDay7Part1(t *testing.T) {
 	}
 }
 
-const expectedD7P2 = ""
+const expectedD7P2 = "24933642"
 
 func TestDay7Part2(t *testing.T) {
 	day := &day7{}
@@ -62,6 +62,8 @@ func TestDay7Part2(t *testing.T) {
 		t.Errorf("[Parse]: %v", err.Error())
 		return
 	}
+
+	populateDirSize(parsed)
 
 	res, err := day.Part2(parsed)
 
