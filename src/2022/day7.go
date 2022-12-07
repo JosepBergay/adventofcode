@@ -21,9 +21,6 @@ type fileTree struct {
 	size     int
 }
 
-func parseLine(line string) {
-}
-
 func createNode(line string) (*fileTree, error) {
 	cmd := strings.Split(line, " ")
 
