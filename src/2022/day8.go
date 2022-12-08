@@ -53,6 +53,20 @@ func getPossiblePaths(point Point, matrix [][]int) [4]Path {
 	}
 }
 
+func createPathWalker(start Point, path Path) func() *Point {
+	i := 1
+	return func() *Point {
+		if i > path.distance {
+			return nil
+		}
+
+		p := &Point{start.x + (path.dir.x * i), start.y + (path.dir.y * i)}
+		i++
+
+		return p
+	}
+}
+
 func isVisibleFromOutside(point Point, matrix [][]int) bool {
 	paths := getPossiblePaths(point, matrix)
 
@@ -61,9 +75,15 @@ func isVisibleFromOutside(point Point, matrix [][]int) bool {
 	// For each direction
 	for _, path := range paths {
 		// Walk path till the edge
+		walk := createPathWalker(point, path)
+
 		reachedEdge := true
-		for i := 1; i <= path.distance; i++ {
-			p := Point{point.x + (path.dir.x * i), point.y + (path.dir.y * i)}
+		for {
+			p := walk()
+
+			if p == nil {
+				break
+			}
 
 			if matrix[p.y][p.x] >= currHeight {
 				// Not visible, stop walking this path
@@ -104,10 +124,15 @@ func computeScenicScore(point Point, matrix [][]int) int {
 	// For each direction
 	for _, path := range paths {
 		// Walk path till the edge
-		mult := 0
+		walk := createPathWalker(point, path)
 
-		for i := 1; i <= path.distance; i++ {
-			p := Point{point.x + (path.dir.x * i), point.y + (path.dir.y * i)}
+		mult := 0
+		for {
+			p := walk()
+
+			if p == nil {
+				break
+			}
 
 			mult += 1
 			if matrix[p.y][p.x] >= currHeight {
