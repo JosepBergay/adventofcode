@@ -69,7 +69,7 @@ func addToVisited(visited map[int]map[int]bool, p Point) {
 	visited[p.x][p.y] = true
 }
 
-func mustMoveTail(h, t Point) bool {
+func mustMoveKnot(h, t Point) bool {
 	return math.Abs(float64(h.x-t.x)) > 1 || math.Abs(float64(h.y-t.y)) > 1
 }
 
@@ -83,7 +83,7 @@ func countVisited(visited map[int]map[int]bool) int {
 	return count
 }
 
-func moveTail(h, t *Point) {
+func moveKnot(h, t *Point) {
 	if h.x != t.x && h.y != t.y {
 		// Not in the same row or column, so move diagonally
 		if h.x-t.x > 0 {
@@ -124,8 +124,8 @@ func (d *day9) Part1(moves []Point) (string, error) {
 		h.x += move.x
 		h.y += move.y
 
-		if mustMoveTail(h, t) {
-			moveTail(&h, &t)
+		if mustMoveKnot(h, t) {
+			moveKnot(&h, &t)
 
 			addToVisited(visited, t)
 		}
@@ -136,8 +136,30 @@ func (d *day9) Part1(moves []Point) (string, error) {
 	return fmt.Sprint(count), nil
 }
 
-func (d *day9) Part2(input []Point) (string, error) {
-	return "TODO", nil
+func (d *day9) Part2(moves []Point) (string, error) {
+	visited := make(map[int]map[int]bool)
+
+	knots := [10]Point{}
+
+	addToVisited(visited, knots[9])
+
+	for _, move := range moves {
+		// Head always moves
+		knots[0].x += move.x
+		knots[0].y += move.y
+
+		for i := 1; i < 10; i++ {
+			if mustMoveKnot(knots[i-1], knots[i]) {
+				moveKnot(&knots[i-1], &knots[i])
+			}
+		}
+
+		addToVisited(visited, knots[9])
+	}
+
+	count := countVisited(visited)
+
+	return fmt.Sprint(count), nil
 }
 
 func (d *day9) Exec(input string) (*DayResult, error) {
