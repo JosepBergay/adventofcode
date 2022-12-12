@@ -106,8 +106,7 @@ func (d *day11) Parse(input string) ([]monkey, error) {
 	return monkeys, nil
 }
 
-func (d *day11) Part1(monkeys []monkey) (string, error) {
-	rounds := 20
+func computeMonkeyBusiness(monkeys []monkey, rounds int, getWorryLvl func(int, monkey) int) int {
 	inspectCount := make([]int, len(monkeys))
 
 	for i := 0; i < rounds; i++ {
@@ -122,7 +121,7 @@ func (d *day11) Part1(monkeys []monkey) (string, error) {
 					break
 				}
 				inspectCount[m]++
-				worryLvl := monkey.op(item) / 3
+				worryLvl := getWorryLvl(item, monkey)
 				throwTo := monkey.ifTrue
 				if worryLvl%monkey.divisibleBy != 0 {
 					throwTo = monkey.ifFalse
@@ -135,11 +134,49 @@ func (d *day11) Part1(monkeys []monkey) (string, error) {
 	sort.Ints(inspectCount)
 
 	monkeyBusiness := inspectCount[len(inspectCount)-1] * inspectCount[len(inspectCount)-2]
+
+	return monkeyBusiness
+}
+
+func (d *day11) Part1(monkeys []monkey) (string, error) {
+	rounds := 20
+
+	getWorryLvl := func(item int, m monkey) int { return m.op(item) / 3 }
+
+	monkeyBusiness := computeMonkeyBusiness(monkeys, rounds, getWorryLvl)
+
 	return fmt.Sprint(monkeyBusiness), nil
 }
 
+/**
+ * Part2 - Given the example:
+ * During round 1:
+ * monkey 0: All items must go to monkey 3 (FALSE)
+ * monkey 1: All items must go to monkey 0 (FALSE)
+ * monkey 2: All items must go to monkey 3 (FALSE)
+ * ...
+ * 💡 Trick is to keep worry level low by computing the minimum common multiple between all monkey
+ * tests. That way we maintain the divisibility checks they were gona take and thus the if/else
+ * condition.
+ */
+
 func (d *day11) Part2(monkeys []monkey) (string, error) {
-	return "TODO", nil
+	rounds := 10_000
+
+	mods := 1
+	for _, m := range monkeys {
+		mods = m.divisibleBy * mods
+	}
+
+	getWorryLvl := func(item int, m monkey) int {
+		x := m.op(item)
+		x = x % mods
+		return x
+	}
+
+	monkeyBusiness := computeMonkeyBusiness(monkeys, rounds, getWorryLvl)
+
+	return fmt.Sprint(monkeyBusiness), nil
 }
 
 func (d *day11) Exec(input string) (*DayResult, error) {
@@ -155,7 +192,9 @@ func (d *day11) Exec(input string) (*DayResult, error) {
 		return nil, err
 	}
 
-	part2, err := d.Part2(parsed)
+	parsed2, _ := d.Parse(input)
+
+	part2, err := d.Part2(parsed2)
 
 	if err != nil {
 		return nil, err
