@@ -97,7 +97,7 @@ func getMinimumDistance(visited map[Point]bool, distances map[Point]int) Point {
 	return point
 }
 
-func (d *day12) Part1(input *Day12Initial) (string, error) {
+func getDistancesFromStart(start Point, input *Day12Initial) map[Point]int {
 	visited := make(map[Point]bool)
 	// prev := make(map[Point]Point) // Map from point to previous point
 	// Should use a priority queue, using a map so we don't have to reorder.
@@ -105,14 +105,19 @@ func (d *day12) Part1(input *Day12Initial) (string, error) {
 	distances := make(map[Point]int, len(input.heightmap))
 
 	for p := range input.heightmap {
-		distances[p] = math.MaxInt
+		// If we use MaxInt, when we add +1 it will overflow and be less than current distance.
+		distances[p] = math.MaxInt - 1
 	}
 
-	distances[input.start] = 0
+	distances[start] = 0
 
 	for i := 0; i < len(input.heightmap); i++ {
 		// Find node with minimum distance
 		curr := getMinimumDistance(visited, distances)
+
+		if curr == input.end {
+			break
+		}
 
 		visited[curr] = true
 
@@ -129,11 +134,32 @@ func (d *day12) Part1(input *Day12Initial) (string, error) {
 		}
 	}
 
+	return distances
+}
+
+func (d *day12) Part1(input *Day12Initial) (string, error) {
+	distances := getDistancesFromStart(input.start, input)
+
 	return fmt.Sprint(distances[input.end]), nil
 }
 
 func (d *day12) Part2(input *Day12Initial) (string, error) {
-	return "TODO", nil
+	min := math.MaxInt
+
+	// Brute force
+	for p, v := range input.heightmap {
+		if v != 'a' {
+			continue
+		}
+
+		distances := getDistancesFromStart(p, input)
+
+		if distances[input.end] < min {
+			min = distances[input.end]
+		}
+	}
+
+	return fmt.Sprint(min), nil
 }
 
 func (d *day12) Exec(input string) (*DayResult, error) {
