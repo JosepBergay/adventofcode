@@ -55,7 +55,7 @@ func (d *day12) Parse(input string) (*Day12Initial, error) {
 	return &Day12Initial{start, end, heightmap, maxX, maxY}, nil
 }
 
-func getNextSquares(curr Point, initial *Day12Initial) []Point {
+func getAdjacentSquares(curr Point, initial *Day12Initial, skipFn func(Point) bool) []Point {
 	dirs := [4]Point{
 		{0, 1},
 		{1, 0},
@@ -74,7 +74,7 @@ func getNextSquares(curr Point, initial *Day12Initial) []Point {
 		}
 
 		// Damn, can't get out my climbing gear!
-		if initial.heightmap[p]-initial.heightmap[curr] > 1 {
+		if skipFn(p) {
 			continue
 		}
 
@@ -84,12 +84,24 @@ func getNextSquares(curr Point, initial *Day12Initial) []Point {
 	return out
 }
 
+var intfinity = int(math.Float64bits(math.Inf(0)))
+
+func hasUnvisited(visited map[Point]bool, distances map[Point]int) bool {
+	for p, v := range visited {
+		if !v && distances[p] == intfinity {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetMinimumDistance finds Point with minimum distance that is not yet visited
-func getMinimumDistance(visited map[Point]bool, distances map[Point]int) Point {
-	min := math.MaxInt
+func getMinimumUnvisitedDistance(visited map[Point]bool, distances map[Point]int) Point {
+	min := intfinity
 	point := Point{}
 	for p := range distances {
-		if _, exists := visited[p]; !exists && distances[p] < min {
+		if yes := visited[p]; !yes && distances[p] < min {
 			min = distances[p]
 			point = p
 		}
@@ -97,7 +109,12 @@ func getMinimumDistance(visited map[Point]bool, distances map[Point]int) Point {
 	return point
 }
 
-func getDistancesFromStart(start Point, input *Day12Initial) map[Point]int {
+func getDistancesFromStart(
+	start Point,
+	reachedEnd func(Point) bool,
+	input *Day12Initial,
+	getNeighbours func(Point) []Point,
+) map[Point]int {
 	visited := make(map[Point]bool)
 	// prev := make(map[Point]Point) // Map from point to previous point
 	// Should use a priority queue, using a map so we don't have to reorder.
@@ -105,24 +122,24 @@ func getDistancesFromStart(start Point, input *Day12Initial) map[Point]int {
 	distances := make(map[Point]int, len(input.heightmap))
 
 	for p := range input.heightmap {
-		// If we use MaxInt, when we add +1 it will overflow and be less than current distance.
-		distances[p] = math.MaxInt - 1
+		distances[p] = intfinity
+		visited[p] = false
 	}
 
 	distances[start] = 0
 
-	for i := 0; i < len(input.heightmap); i++ {
+	for hasUnvisited(visited, distances) {
 		// Find node with minimum distance
-		curr := getMinimumDistance(visited, distances)
+		curr := getMinimumUnvisitedDistance(visited, distances)
 
-		if curr == input.end {
+		if reachedEnd(curr) {
 			break
 		}
 
 		visited[curr] = true
 
-		for _, n := range getNextSquares(curr, input) {
-			if _, ok := visited[n]; ok {
+		for _, n := range getNeighbours(curr) {
+			if yes := visited[n]; yes {
 				continue
 			}
 
@@ -138,24 +155,43 @@ func getDistancesFromStart(start Point, input *Day12Initial) map[Point]int {
 }
 
 func (d *day12) Part1(input *Day12Initial) (string, error) {
-	distances := getDistancesFromStart(input.start, input)
+	reachedEnd := func(curr Point) bool {
+		return curr == input.end
+	}
+
+	getNeighbours := func(curr Point) []Point {
+		return getAdjacentSquares(curr, input, func(p Point) bool {
+			// Damn, can't get out my climbing gear!
+			return input.heightmap[p]-input.heightmap[curr] > 1
+		})
+	}
+
+	distances := getDistancesFromStart(input.start, reachedEnd, input, getNeighbours)
 
 	return fmt.Sprint(distances[input.end]), nil
 }
 
 func (d *day12) Part2(input *Day12Initial) (string, error) {
-	min := math.MaxInt
+	endRune := 'a'
 
-	// Brute force
-	for p, v := range input.heightmap {
-		if v != 'a' {
-			continue
-		}
+	reachedEnd := func(curr Point) bool {
+		return input.heightmap[curr] == endRune
+	}
 
-		distances := getDistancesFromStart(p, input)
+	getNeighbours := func(curr Point) []Point {
+		return getAdjacentSquares(curr, input, func(p Point) bool {
+			// What about my downhill gear?!
+			step := input.heightmap[p] - input.heightmap[curr]
+			return step < -1
+		})
+	}
 
-		if distances[input.end] < min {
-			min = distances[input.end]
+	distances := getDistancesFromStart(input.end, reachedEnd, input, getNeighbours)
+
+	min := intfinity
+	for p, dist := range distances {
+		if input.heightmap[p] == endRune && dist < min {
+			min = dist
 		}
 	}
 
