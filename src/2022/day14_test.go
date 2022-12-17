@@ -29,7 +29,7 @@ func TestDay14Part1(t *testing.T) {
 	}
 }
 
-const expectedD14P2 = ""
+const expectedD14P2 = "93"
 
 func TestDay14Part2(t *testing.T) {
 	day := &day14{}

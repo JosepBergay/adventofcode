@@ -76,7 +76,18 @@ func (d *day14) Parse(input string) (map[Point]bool, error) {
 	return points, nil
 }
 
-func (d *day14) Part1(input map[Point]bool) (string, error) {
+func copyMap[K comparable, V any](m map[K]V) map[K]V {
+	m2 := make(map[K]V, len(m))
+	for k := range m {
+		m2[k] = m[k]
+	}
+	return m2
+}
+
+func (d *day14) simulateFallingSand(
+	isEmptySpace func(next Point, cave map[Point]bool) bool,
+	stop func(sandUnit Point) bool,
+) int {
 	dirs := [3]Point{
 		{0, 1},
 		{-1, 1},
@@ -84,6 +95,8 @@ func (d *day14) Part1(input map[Point]bool) (string, error) {
 	}
 
 	sandUnits := 0
+
+	cave := copyMap(d.rocks)
 
 	for {
 		sandUnit := Point{d.start.x, d.start.y}
@@ -93,7 +106,7 @@ func (d *day14) Part1(input map[Point]bool) (string, error) {
 			for _, dir := range dirs {
 				next := Point{sandUnit.x + dir.x, sandUnit.y + dir.y}
 
-				if rock := d.rocks[next]; !rock {
+				if isEmptySpace(next, cave) {
 					// Found empty space so move sandUnit there.
 					sandUnit = next
 					moved = true
@@ -101,26 +114,50 @@ func (d *day14) Part1(input map[Point]bool) (string, error) {
 				}
 			}
 
-			if !moved {
-				// Sand unit came to rest, let's break and produce another one.
-				d.rocks[sandUnit] = true
-				break
+			if stop(sandUnit) {
+				return sandUnits
 			}
 
-			if sandUnit.y > d.furthestRock.y {
-				// Falling to the endless void
-				return fmt.Sprint(sandUnits), nil
+			if !moved {
+				// Sand unit came to rest, let's break and produce another one.
+				cave[sandUnit] = true
+				break
 			}
 		}
 
 		sandUnits++
 	}
+}
 
-	// return "TODO", nil
+func (d *day14) Part1(input map[Point]bool) (string, error) {
+	sandUnits := d.simulateFallingSand(
+		func(next Point, cave map[Point]bool) bool {
+			// Empty space.
+			return !cave[next]
+		},
+		func(sandUnit Point) bool {
+			// Falling to the endless void.
+			return sandUnit.y > d.furthestRock.y
+		})
+
+	return fmt.Sprint(sandUnits), nil
 }
 
 func (d *day14) Part2(input map[Point]bool) (string, error) {
-	return "TODO", nil
+	floorHeight := d.furthestRock.y + 2
+
+	sandUnits := d.simulateFallingSand(
+		func(next Point, cave map[Point]bool) bool {
+			// Empty space and not reached the floor.
+			return !cave[next] && next.y < floorHeight
+		},
+		func(sandUnit Point) bool {
+			// Sand unit didn't move at all.
+			return sandUnit == d.start
+		})
+
+	// We stop just before adding sandUnit to start space so we need to add one.
+	return fmt.Sprint(sandUnits + 1), nil
 }
 
 func (d *day14) Exec(input string) (*DayResult, error) {
