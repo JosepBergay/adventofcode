@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -155,8 +156,38 @@ func (d *day13) Part1(input *day13Input) (string, error) {
 	return fmt.Sprint(sum), nil
 }
 
+type packets []*packetData
+
+func (a packets) Len() int           { return len(a) }
+func (a packets) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a packets) Less(i, j int) bool { return areInOrder(*a[i], *a[j]) < 0 }
+
 func (d *day13) Part2(input *day13Input) (string, error) {
-	return "TODO", nil
+	dividersStr := "[[2]]\n[[6]]"
+
+	dividers, err := d.Parse(dividersStr)
+	if err != nil {
+		return "", err
+	}
+
+	flat := make(packets, 0)
+	for _, p := range input.pairs {
+		flat = append(flat, p[0], p[1])
+	}
+	flat = append(flat, dividers.pairs[0][0], dividers.pairs[0][1])
+
+	// TODO: implement our own sorting
+	sort.Sort(flat) // Sorts in place using 'https://github.com/orlp/pdqsort' from std lib
+
+	decoderKey := 1
+	for i, v := range flat {
+		s := fmt.Sprint(v)
+		if s == "[[[2]]]" || s == "[[[6]]]" {
+			decoderKey *= i + 1
+		}
+	}
+
+	return fmt.Sprint(decoderKey), nil
 }
 
 func (d *day13) Exec(input string) (*DayResult, error) {
