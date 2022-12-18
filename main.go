@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 const CookieName = "SESSION_COOKIE"
@@ -96,7 +97,17 @@ func runDay(dayNum int, cookie string, r responses) {
 
 	}
 
+	start := time.Now()
+
 	res, err := day.Exec(input)
+
+	elapsed := time.Since(start)
+	if elapsed > time.Second {
+		elapsed = elapsed.Truncate(time.Millisecond)
+	} else {
+		elapsed = elapsed.Truncate(time.Microsecond)
+
+	}
 
 	if err != nil {
 		result.message = fmt.Sprintf("[Exec]: %v", err.Error())
@@ -104,6 +115,6 @@ func runDay(dayNum int, cookie string, r responses) {
 		return
 	}
 
-	result.message = fmt.Sprintf("[Part1]: %v, [Part2]: %v", res.Part1, res.Part2)
+	result.message = fmt.Sprintf("[Part1]: %v, [Part2]: %v (%v)", res.Part1, res.Part2, elapsed)
 	r.success <- result
 }
