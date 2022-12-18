@@ -19,9 +19,15 @@ go build
 
 ### Run
 
-E.g.:
+Pass which days you want to run. Or pass nothing to run them all.
 ```bash
 adventofcode 1 2 # Will run day 1 and 2
+
+...
+
+Running days [1 2]
+Day 2:  [Part1]: 13484 [Part2]: 13433 (450µs)
+Day 1:  [Part1]: 70369 [Part2]: 203002 (328µs)
 ```
 
 ### Development
