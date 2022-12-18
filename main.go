@@ -80,6 +80,13 @@ func runDay(dayNum int, cookie string, r responses) {
 
 	result := chanResult{day: dayNum}
 
+	day, ok := aoc2022.Days[dayNum]
+	if !ok {
+		result.message = "not implemented"
+		r.errors <- result
+		return
+	}
+
 	input, err := aoc2022.FetchInput(dayNum, cookie)
 
 	if err != nil {
@@ -87,13 +94,6 @@ func runDay(dayNum int, cookie string, r responses) {
 		r.errors <- result
 		return
 
-	}
-
-	day, ok := aoc2022.Days[dayNum]
-	if !ok {
-		result.message = "not implemented"
-		r.errors <- result
-		return
 	}
 
 	res, err := day.Exec(input)
