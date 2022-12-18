@@ -43,7 +43,7 @@ func TestDay15Part1(t *testing.T) {
 	}
 }
 
-const expectedD15P2 = ""
+const expectedD15P2 = "56000011"
 
 func TestDay15Part2(t *testing.T) {
 	day := &day15{}
@@ -55,6 +55,8 @@ func TestDay15Part2(t *testing.T) {
 		return
 	}
 
+	day.minX, day.minY = 0, 0
+	day.maxX, day.maxY = 20, 20
 	res, err := day.Part2(parsed)
 
 	if err != nil {

@@ -139,10 +139,12 @@ func (d *day15) Part1(input string) (string, error) {
 	for x := d.minX; x <= d.maxX; x++ {
 		p := Point{x, d.row}
 
-		for sensor, beacon := range d.sensorsToBeacons {
-			manhattan := getManhattanDistance(sensor, beacon)
+		if _, ok := d.cave[p]; ok {
+			continue
+		}
 
-			if _, ok := d.cave[p]; !ok && getManhattanDistance(sensor, p) <= manhattan {
+		for sensor, beacon := range d.sensorsToBeacons {
+			if getManhattanDistance(sensor, p) <= getManhattanDistance(sensor, beacon) {
 				out++
 				break
 			}
@@ -153,7 +155,37 @@ func (d *day15) Part1(input string) (string, error) {
 }
 
 func (d *day15) Part2(input string) (string, error) {
-	return "TODO", nil
+	for x := 0; x <= d.maxX; x++ {
+		for y := 0; y <= d.maxY; y++ {
+			curr := Point{x, y}
+			var sensor *Point
+			sensorToBeaconDist := 0
+
+			for s, b := range d.sensorsToBeacons {
+				sensorToCurrDist := getManhattanDistance(s, curr)
+				sensorToBeaconDist = getManhattanDistance(s, b)
+
+				if sensorToCurrDist <= sensorToBeaconDist {
+					sensor = &s
+					break
+				}
+			}
+
+			if sensor != nil {
+				// Move y out of this sensor detection zone.
+				aux := math.Abs(float64(curr.x - sensor.x))
+				y = y + sensor.y - curr.y + sensorToBeaconDist - int(aux)
+				continue
+			}
+
+			if _, ok := d.cave[curr]; !ok {
+				out := curr.x*4000000 + curr.y
+				return fmt.Sprint(out), nil
+			}
+		}
+	}
+
+	return "", errors.New("not found :(")
 }
 
 func (d *day15) Exec(input string) (*DayResult, error) {
@@ -170,6 +202,8 @@ func (d *day15) Exec(input string) (*DayResult, error) {
 		return nil, err
 	}
 
+	d.minX, d.minY = 0, 0
+	d.maxX, d.maxY = 4_000_000, 4_000_000
 	part2, err := d.Part2(parsed)
 
 	if err != nil {
