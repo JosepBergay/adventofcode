@@ -41,8 +41,10 @@ func main() {
 	}
 
 	if len(days) == 0 {
-		fmt.Println("Nothing to do :(")
-		return
+		// Run them all
+		for i := 1; i <= len(aoc2022.Days); i++ {
+			days = append(days, i)
+		}
 	}
 
 	success := make(chan chanResult, len(days))
