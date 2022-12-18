@@ -34,7 +34,7 @@ func main() {
 		dayX, err := strconv.Atoi(v)
 
 		if err != nil {
-			fmt.Printf("Unknown argument %v skipping", v)
+			fmt.Printf("Unknown argument %v\n", v)
 			continue
 		}
 		days = append(days, dayX)
@@ -56,7 +56,7 @@ func main() {
 	for {
 		select {
 		case res := <-success:
-			fmt.Printf("Day %v result: %v\n", res.day, res.message)
+			fmt.Printf("Day %v:\t%v\n", res.day, res.message)
 		case res := <-errors:
 			fmt.Printf("Day %v error: %v\n", res.day, res.message)
 		}
@@ -68,7 +68,7 @@ func main() {
 }
 
 func runDays(days []int, cookie string, r responses) {
-	fmt.Printf("Running days %v\n", days)
+	fmt.Println("Running days", days)
 
 	for _, day := range days {
 		go runDay(day, cookie, r)
@@ -76,9 +76,6 @@ func runDays(days []int, cookie string, r responses) {
 }
 
 func runDay(dayNum int, cookie string, r responses) {
-
-	fmt.Printf("Running day %v\n", dayNum)
-
 	result := chanResult{day: dayNum}
 
 	day, ok := aoc2022.Days[dayNum]
@@ -115,6 +112,6 @@ func runDay(dayNum int, cookie string, r responses) {
 		return
 	}
 
-	result.message = fmt.Sprintf("[Part1]: %v, [Part2]: %v (%v)", res.Part1, res.Part2, elapsed)
+	result.message = fmt.Sprintf("[Part1]: %v [Part2]: %v (%v)", res.Part1, res.Part2, elapsed)
 	r.success <- result
 }
