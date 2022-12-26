@@ -221,8 +221,13 @@ func (d *day16) Part2(input string) (string, error) {
 	// The idea is to find the two paths with highest pressure that don't overlap.
 	out := 0
 	// paths := [2][]valve{}
-	//! This will take a while... ~40m :<
+	// TODO: add further optimizations.
 	for i, pp := range pathsPressures {
+		// Optimization: 1915 is the answer from part1. We assume that total's path pressure will be
+		// at least half of part1. This takes it down from ~40m to ~5m.
+		if pp.pressure < 1915/2 {
+			continue
+		}
 		for j := i + 1; j < len(pathsPressures); j++ {
 			overlaps := false
 			for _, v := range pathsPressures[j].path {
