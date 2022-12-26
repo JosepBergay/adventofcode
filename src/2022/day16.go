@@ -101,9 +101,6 @@ func (d *day16) findShortestDistanceBetweenValves(from, to valve) int {
 	// find distance
 	p := utils.FindShortestPath(from, to, d.all, func(curr valve) []valve {
 		adjacents := make([]valve, 0)
-		// if curr.connected == nil {
-		// 	fmt.Println(from, to, curr)
-		// }
 		for _, v := range *curr.connected {
 			adjacents = append(adjacents, d.valves[v])
 		}
@@ -126,14 +123,13 @@ func (p valve) String() string {
 	return p.id
 }
 
-func (d *day16) getPathPressure(path []valve) int {
+func (d *day16) getPathPressure(path []valve, maxMinutes int) int {
 	start := d.valves[d.start]
-	minutes := 30
 	total := 0
 
 	curr := start
 	pos := 0
-	for i := minutes; i > 0; i-- {
+	for i := maxMinutes; i > 0; i-- {
 		if pos >= len(path)-1 {
 			break
 		}
@@ -150,7 +146,7 @@ func (d *day16) getPathPressure(path []valve) int {
 	return total
 }
 
-func (d *day16) generateAllPaths(path []valve, unseen []valve, distance int) {
+func (d *day16) generateAllPaths(path []valve, unseen []valve, distance, maxMinutes int) {
 	if len(unseen) == 0 {
 		allPathsMap[fmt.Sprint(path)] = path
 		return
@@ -161,7 +157,7 @@ func (d *day16) generateAllPaths(path []valve, unseen []valve, distance int) {
 	for _, v := range unseen {
 		dist := d.findShortestDistanceBetweenValves(last, v)
 
-		if dist+1+distance >= 30 {
+		if dist+1+distance >= maxMinutes {
 			allPathsMap[fmt.Sprint(path)] = path
 			continue
 		}
@@ -175,20 +171,19 @@ func (d *day16) generateAllPaths(path []valve, unseen []valve, distance int) {
 		copiedPath := make([]valve, len(path))
 		copy(copiedPath, path)
 		copiedPath = append(copiedPath, v)
-		d.generateAllPaths(copiedPath, newUnseen, dist+1+distance)
+		d.generateAllPaths(copiedPath, newUnseen, dist+1+distance, maxMinutes)
 	}
 }
 
 func (d *day16) Part1(input string) (string, error) {
 	startingPath := make([]valve, 0)
 	startingPath = append(startingPath, d.valves[d.start])
-	d.generateAllPaths(startingPath, d.getValvesWithFlowAndNotOpened(), 0)
-
-	fmt.Println(len(allPathsMap))
+	maxMinutes := 30
+	d.generateAllPaths(startingPath, d.getValvesWithFlowAndNotOpened(), 0, maxMinutes)
 
 	out := 0
 	for _, path := range allPathsMap {
-		if p := d.getPathPressure(path); p > out {
+		if p := d.getPathPressure(path, maxMinutes); p > out {
 			out = p
 		}
 	}
@@ -196,8 +191,56 @@ func (d *day16) Part1(input string) (string, error) {
 	return fmt.Sprint(out), nil
 }
 
+type pathPressure struct {
+	path     []valve
+	pressure int
+}
+
 func (d *day16) Part2(input string) (string, error) {
-	return "TODO", nil
+	// Reset all paths in case part1 was run before.
+	allPathsMap = make(map[string][]valve)
+
+	// Generate again but with 26 minutes left
+	startingPath := make([]valve, 0)
+	startingPath = append(startingPath, d.valves[d.start])
+	maxMinutes := 26
+	d.generateAllPaths(startingPath, d.getValvesWithFlowAndNotOpened(), 0, maxMinutes)
+
+	// Me:			[JJ, BB, CC]
+	// Elephant:	[DD, HH, EE]
+
+	pathsPressures := make([]pathPressure, 0)
+	for _, path := range allPathsMap {
+		p := pathPressure{
+			path:     path[1:], // Skip start ('AA')
+			pressure: d.getPathPressure(path, maxMinutes),
+		}
+		pathsPressures = append(pathsPressures, p)
+	}
+
+	// The idea is to find the two paths with highest pressure that don't overlap.
+	out := 0
+	// paths := [2][]valve{}
+	//! This will take a while... ~40m :<
+	for i, pp := range pathsPressures {
+		for j := i + 1; j < len(pathsPressures); j++ {
+			overlaps := false
+			for _, v := range pathsPressures[j].path {
+				overlaps = strings.Contains(fmt.Sprint(pp.path), v.id)
+				if overlaps {
+					break
+				}
+			}
+			if !overlaps && out < pp.pressure+pathsPressures[j].pressure {
+				out = pp.pressure + pathsPressures[j].pressure
+				// paths[0], paths[1] = pp.path, pathsPressures[j].path
+			}
+		}
+	}
+
+	// fmt.Println(paths)
+
+	return fmt.Sprint(out), nil
 }
 
 func (d *day16) Exec(input string) (*DayResult, error) {
