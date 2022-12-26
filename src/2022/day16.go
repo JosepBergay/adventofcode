@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -218,32 +219,39 @@ func (d *day16) Part2(input string) (string, error) {
 		pathsPressures = append(pathsPressures, p)
 	}
 
+	// Sort descending
+	sort.Slice(pathsPressures, func(i, j int) bool {
+		return pathsPressures[i].pressure > pathsPressures[j].pressure
+	})
+
 	// The idea is to find the two paths with highest pressure that don't overlap.
 	out := 0
-	// paths := [2][]valve{}
-	// TODO: add further optimizations.
-	for i, pp := range pathsPressures {
+
+	// Optimization: If we sort the aray we can assume best combination will be on the upper half of
+	// the array (or upper quarter :P).
+	for i := 0; i < len(pathsPressures)/4; i++ {
+		pp := pathsPressures[i]
 		// Optimization: 1915 is the answer from part1. We assume that total's path pressure will be
 		// at least half of part1. This takes it down from ~40m to ~5m.
 		if pp.pressure < 1915/2 {
 			continue
 		}
-		for j := i + 1; j < len(pathsPressures); j++ {
+		// Optimization: moving Sprint from the most inner loop to here takes it down from ~5m to
+		// ~10s. Such big impact.
+		pathStr := fmt.Sprint(pp.path)
+		for j := i + 1; j < len(pathsPressures)/4; j++ {
 			overlaps := false
 			for _, v := range pathsPressures[j].path {
-				overlaps = strings.Contains(fmt.Sprint(pp.path), v.id)
+				overlaps = strings.Contains(pathStr, v.id)
 				if overlaps {
 					break
 				}
 			}
 			if !overlaps && out < pp.pressure+pathsPressures[j].pressure {
 				out = pp.pressure + pathsPressures[j].pressure
-				// paths[0], paths[1] = pp.path, pathsPressures[j].path
 			}
 		}
 	}
-
-	// fmt.Println(paths)
 
 	return fmt.Sprint(out), nil
 }
