@@ -108,6 +108,15 @@ func moveRockRight(r Chamber) Chamber {
 	return moved
 }
 
+func moveRockHorizontally(r Chamber, getJet func() byte) Chamber {
+	jet := getJet()
+	if jet == '>' {
+		return moveRockRight(r)
+	} else {
+		return moveRockLeft(r)
+	}
+}
+
 func addLines(l1, l2 [7]int) (*[7]int, error) {
 	out := [7]int{}
 	for i := 0; i < 7; i++ {
@@ -119,9 +128,70 @@ func addLines(l1, l2 [7]int) (*[7]int, error) {
 	return &out, nil
 }
 
-func (d *day17) Part1(input string) (string, error) {
+func moveRock(rock Chamber, chamber *Chamber, getJet func() byte) {
+	// Each rock appears 3 units above the highest rock. We can skip downward movement for now.
+	for i := 0; i < 3; i++ {
+		rock = moveRockHorizontally(rock, getJet)
+	}
+
+	// Now we are just on top of the highest rock. Start cycle.
+	l := len(*chamber)
+	for {
+		next := moveRockHorizontally(rock, getJet)
+		// Check overlap
+		overlap := false
+		for i := len(next) - 1; i >= 0; i-- {
+			j := len(rock) - 1 - i + l
+			if j >= len(*chamber) {
+				break
+			}
+			_, err := addLines(next[i], (*chamber)[j])
+			if err != nil {
+				overlap = true
+				break
+			}
+		}
+
+		// If there's no horizontal overlap update r.
+		if !overlap {
+			rock = next
+		}
+
+		overlap = false
+		for i := len(rock) - 1; i >= 0; i-- {
+			j := len(rock) - 1 - i + l - 1
+			if j < 0 || j >= len(*chamber) {
+				break
+			}
+			_, err := addLines(rock[i], (*chamber)[j])
+			if err != nil {
+				overlap = true
+				break
+			}
+		}
+
+		if !overlap && l > 0 {
+			l--
+			continue
+		}
+
+		// If there's overlap going down, rock comes to rest.
+		// Add rock in reverse so it stacks correctly.
+		for i := len(rock) - 1; i >= 0; i-- {
+			j := len(rock) - 1 - i + l
+			if j < 0 || j >= len(*chamber) {
+				*chamber = append(*chamber, rock[i])
+			} else {
+				line, _ := addLines((*chamber)[j], rock[i])
+				(*chamber)[j] = *line
+			}
+		}
+		break
+	}
+}
+
+func (d *day17) runChamberSimulation(input string, rockCount int) int {
 	chamber := make(Chamber, 0)
-	count := 2022
 
 	jetIdx := 0
 	getJet := func() (jet byte) {
@@ -130,87 +200,32 @@ func (d *day17) Part1(input string) (string, error) {
 		return
 	}
 
-	moveRockHorizontally := func(r Chamber) Chamber {
-		jet := getJet()
-		if jet == '>' {
-			return moveRockRight(r)
-		} else {
-			return moveRockLeft(r)
-		}
-	}
-
 	// For each rock
-	for rockIdx := 0; rockIdx < count; rockIdx++ {
-		r := d.rocks[rockIdx%5]
+	for rockIdx := 0; rockIdx < rockCount; rockIdx++ {
+		rock := d.rocks[rockIdx%5]
 
-		// Each rock appears 3 units above the highest rock. We can skip downward movement for now.
-		for i := 0; i < 3; i++ {
-			r = moveRockHorizontally(r)
-		}
-
-		// Now we are just on top of the highest rock. Start cycle.
-		l := len(chamber)
-		for {
-			next := moveRockHorizontally(r)
-			// Check overlap
-			overlap := false
-			for i := len(next) - 1; i >= 0; i-- {
-				j := len(r) - 1 - i + l
-				if j >= len(chamber) {
-					break
-				}
-				_, err := addLines(next[i], chamber[j])
-				if err != nil {
-					overlap = true
-					break
-				}
-				// next[i] = *added
-			}
-
-			// If there's no horizontal overlap update r.
-			if !overlap {
-				r = next
-			}
-
-			overlap = false
-			for i := len(r) - 1; i >= 0; i-- {
-				j := len(r) - 1 - i + l - 1
-				if j < 0 || j >= len(chamber) {
-					break
-				}
-				_, err := addLines(r[i], chamber[j])
-				if err != nil {
-					overlap = true
-					break
-				}
-			}
-
-			if !overlap && l > 0 {
-				l--
-				continue
-			}
-
-			// If there's overlap going down, rock comes to rest.
-			// Add rock in reverse so it stacks correctly.
-			for i := len(r) - 1; i >= 0; i-- {
-				j := len(r) - 1 - i + l
-				if j < 0 || j >= len(chamber) {
-					chamber = append(chamber, r[i])
-				} else {
-					line, _ := addLines(chamber[j], r[i])
-					chamber[j] = *line
-				}
-			}
-			break
-		}
+		moveRock(rock, &chamber, getJet)
 
 	}
 
-	return fmt.Sprint(len(chamber)), nil
+	return len(chamber)
+
+}
+
+func (d *day17) Part1(input string) (string, error) {
+	rockCount := 2022
+
+	height := d.runChamberSimulation(input, rockCount)
+
+	return fmt.Sprint(height), nil
 }
 
 func (d *day17) Part2(input string) (string, error) {
-	return "TODO", nil
+	rockCount := 2022 // 1_000_000_000_000
+
+	height := d.runChamberSimulation(input, rockCount)
+
+	return fmt.Sprint(height), nil
 }
 
 func (d *day17) Exec(input string) (*DayResult, error) {
