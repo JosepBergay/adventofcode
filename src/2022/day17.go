@@ -200,18 +200,43 @@ func (d *day17) runChamberSimulation(input string, rockCount int) int {
 		return
 	}
 
+	// 2282 was found empirically. Started checking cycles well into the cycle (10_000) then reduced
+	// that number. Turns out there are some (minor) cycles in the first part of the loop.
+	magicNumber := 2282 // 10_000
+
+	// [jetIdx, rockModulo]: [height, rockIdx]
+	cache := make(map[[2]int][2]int)
+
+	// Tracking virtually added height
+	h := 0
+
 	// For each rock
 	for rockIdx := 0; rockIdx < rockCount; rockIdx++ {
 		rock := d.rocks[rockIdx%5]
 
 		moveRock(rock, &chamber, getJet)
 
+		hash := [2]int{jetIdx % len(input), rockIdx % len(d.rocks)}
+		if h == 0 && rockIdx > magicNumber {
+			if v, ok := cache[hash]; ok {
+				// Found a cycle !?
+				cycleHeight := len(chamber) - v[0]
+				cycleLength := rockIdx - v[1]
+				cyclesLeft := (rockCount - rockIdx) / cycleLength
+				h += cyclesLeft * cycleHeight
+				rocksLeft := (rockCount - rockIdx) % cycleLength
+				// Skip looping until last partial cycle.
+				rockIdx = rockCount - rocksLeft
+			}
+		}
+
+		cache[hash] = [2]int{len(chamber), rockIdx}
 	}
 
-	return len(chamber)
-
+	return len(chamber) + h
 }
 
+// Len 77-25=52;
 func (d *day17) Part1(input string) (string, error) {
 	rockCount := 2022
 
@@ -221,7 +246,7 @@ func (d *day17) Part1(input string) (string, error) {
 }
 
 func (d *day17) Part2(input string) (string, error) {
-	rockCount := 2022 // 1_000_000_000_000
+	rockCount := 1_000_000_000_000
 
 	height := d.runChamberSimulation(input, rockCount)
 
