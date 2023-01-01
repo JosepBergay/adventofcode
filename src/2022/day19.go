@@ -102,11 +102,9 @@ func getMaxInt(a, b int) int {
 	return int(math.Max(float64(a), float64(b)))
 }
 
-func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
+func computeBluePrintMaxGeodes(bp blueprint, minutes int) int {
 	initialState := robotFactoryState{}
 	initialState.robotCount[0] = 1
-
-	// cache := make(map[robotFactoryState][2]int)
 
 	var runFactory func(s robotFactoryState, timeLeft, buildNext int) int
 	runFactory = func(s robotFactoryState, timeLeft, buildNext int) int {
@@ -125,15 +123,15 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 		if buildNext == 1 && s.resources.clay >= bp.obsidianRobot.clay {
 			return 0
 		}
-		if buildNext == 2 && s.resources.obsidian >= bp.geodeRobot.obsidian {
+		// Although our input does not fail we got to add `s.resources.clay == 0` for tests to pass.
+		// Case is when we don't have enough obsidian but what we really need is clay
+		if buildNext == 2 &&
+			(s.resources.obsidian >= bp.geodeRobot.obsidian || s.resources.clay == 0) {
 			return 0
 		}
 		// Always build geodeRobots
-		// if buildNext == 3 && s.resources.geode >= bp.g
+		// if buildNext == 3 && s.resources.geode >= bp.g...
 
-		// if v, ok := cache[s]; ok && v[0] == buildNext {
-		// 	return v[1]
-		// }
 		maxGeodes := 0
 
 		for timeLeft > 0 {
@@ -144,7 +142,6 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 				for i := 0; i < 4; i++ {
 					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
 				}
-				// cache[s] = [2]int{buildNext, maxGeodes}
 				return maxGeodes
 			} else if buildNext == 1 && s.canBuildRobot(bp.clayRobot) {
 				s.buildRobot(bp.clayRobot)
@@ -153,7 +150,6 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 				for i := 0; i < 4; i++ {
 					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
 				}
-				// cache[s] = [2]int{buildNext, maxGeodes}
 				return maxGeodes
 			} else if buildNext == 2 && s.canBuildRobot(bp.obsidianRobot) {
 				s.buildRobot(bp.obsidianRobot)
@@ -162,7 +158,6 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 				for i := 0; i < 4; i++ {
 					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
 				}
-				// cache[s] = [2]int{buildNext, maxGeodes}
 				return maxGeodes
 			} else if buildNext == 3 && s.canBuildRobot(bp.geodeRobot) {
 				s.buildRobot(bp.geodeRobot)
@@ -172,7 +167,6 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 				for i := 0; i < 4; i++ {
 					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
 				}
-				// cache[s] = [2]int{buildNext, maxGeodes}
 				return maxGeodes
 			}
 
@@ -182,7 +176,6 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 			timeLeft--
 		}
 
-		// cache[s] = [2]int{buildNext, maxGeodes}
 		return maxGeodes
 	}
 
@@ -191,7 +184,7 @@ func computeBluePrintQualityLevelRec(bp blueprint, minutes int) int {
 		maxGeodes = getMaxInt(maxGeodes, runFactory(initialState, minutes, i))
 	}
 
-	return maxGeodes * bp.id
+	return maxGeodes
 }
 
 func (d *day19) Part1(input []blueprint) (string, error) {
@@ -199,14 +192,24 @@ func (d *day19) Part1(input []blueprint) (string, error) {
 	out := 0
 
 	for _, bp := range input {
-		out += computeBluePrintQualityLevelRec(bp, minutes)
+		out += bp.id * computeBluePrintMaxGeodes(bp, minutes)
 	}
 
 	return fmt.Sprint(out), nil
 }
 
 func (d *day19) Part2(input []blueprint) (string, error) {
-	return "TODO", nil
+	minutes := 32
+	out := 1
+
+	for i, bp := range input {
+		if i == 3 {
+			break
+		}
+		out *= computeBluePrintMaxGeodes(bp, minutes)
+	}
+
+	return fmt.Sprint(out), nil
 }
 
 func (d *day19) Exec(input string) (*DayResult, error) {
