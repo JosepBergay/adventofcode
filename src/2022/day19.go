@@ -106,6 +106,8 @@ func computeBluePrintMaxGeodes(bp blueprint, minutes int) int {
 	initialState := robotFactoryState{}
 	initialState.robotCount[0] = 1
 
+	robots := [4]materials{bp.oreRobot, bp.clayRobot, bp.obsidianRobot, bp.geodeRobot}
+
 	var runFactory func(s robotFactoryState, timeLeft, buildNext int) int
 	runFactory = func(s robotFactoryState, timeLeft, buildNext int) int {
 		if timeLeft == 0 {
@@ -135,35 +137,10 @@ func computeBluePrintMaxGeodes(bp blueprint, minutes int) int {
 		maxGeodes := 0
 
 		for timeLeft > 0 {
-			if buildNext == 0 && s.canBuildRobot(bp.oreRobot) {
-				s.buildRobot(bp.oreRobot)
+			if s.canBuildRobot(robots[buildNext]) {
+				s.buildRobot(robots[buildNext])
 				s.gatherResources()
-				s.robotCount[0]++
-				for i := 0; i < 4; i++ {
-					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
-				}
-				return maxGeodes
-			} else if buildNext == 1 && s.canBuildRobot(bp.clayRobot) {
-				s.buildRobot(bp.clayRobot)
-				s.gatherResources()
-				s.robotCount[1]++
-				for i := 0; i < 4; i++ {
-					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
-				}
-				return maxGeodes
-			} else if buildNext == 2 && s.canBuildRobot(bp.obsidianRobot) {
-				s.buildRobot(bp.obsidianRobot)
-				s.gatherResources()
-				s.robotCount[2]++
-				for i := 0; i < 4; i++ {
-					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
-				}
-				return maxGeodes
-			} else if buildNext == 3 && s.canBuildRobot(bp.geodeRobot) {
-				s.buildRobot(bp.geodeRobot)
-				s.gatherResources()
-				s.robotCount[3]++
-
+				s.robotCount[buildNext]++
 				for i := 0; i < 4; i++ {
 					maxGeodes = getMaxInt(maxGeodes, runFactory(s, timeLeft-1, i))
 				}
