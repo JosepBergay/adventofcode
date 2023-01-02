@@ -2,11 +2,6 @@ package utils
 
 import "fmt"
 
-type Node[T any] struct {
-	value T
-	prev  *Node[T]
-}
-
 type Stack[T any] struct {
 	tail   *Node[T]
 	length int
