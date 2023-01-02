@@ -54,6 +54,16 @@ func (l *DoublyLinkedList[T]) InsertAt(item T, idx int) error {
 		return createOutOfBoundsError(l.length, idx)
 	}
 
+	if idx == 0 {
+		l.Prepend(item)
+		return nil
+	}
+
+	if idx == l.length {
+		l.Append(item)
+		return nil
+	}
+
 	l.length++
 
 	newNode := createNode(item)
