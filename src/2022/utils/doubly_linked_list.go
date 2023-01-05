@@ -8,6 +8,19 @@ type DoublyLinkedList[T comparable] struct {
 	length int
 }
 
+func (l DoublyLinkedList[any]) String() string {
+	arr := make([]any, l.length)
+	curr := l.head
+	i := 0
+	for curr != nil {
+		arr[i] = curr.value
+		curr = curr.next
+		i++
+	}
+
+	return fmt.Sprint(arr)
+}
+
 func (l *DoublyLinkedList[T]) Append(item T) {
 	l.length++
 
@@ -22,6 +35,37 @@ func (l *DoublyLinkedList[T]) Append(item T) {
 	l.tail.next = node
 	node.prev = l.tail
 	l.tail = node
+}
+
+// Traverse will call provided callback for each item in the list, if callback returns true it will
+// stop the traversal.
+func (l *DoublyLinkedList[T]) Traverse(callback func(item T, idx int) bool) {
+	for i, curr := 0, l.head; curr != nil; i, curr = i+1, curr.next {
+		stop := callback(curr.value, i)
+		if stop {
+			break
+		}
+	}
+}
+
+func (l *DoublyLinkedList[T]) Find(predicate func(item T, idx int) bool) (T, int, error) {
+	curr := l.head
+	i := 0
+	for curr != nil {
+		ok := predicate(curr.value, i)
+		if ok {
+			break
+		}
+		curr = curr.next
+		i++
+	}
+
+	if curr == nil {
+		v, err := createNotFoundError[T]()
+		return v, -1, err
+	}
+
+	return curr.value, i, nil
 }
 
 func (l *DoublyLinkedList[T]) Get(index int) (T, error) {
@@ -163,6 +207,26 @@ func (l *DoublyLinkedList[T]) RemoveAt(index int) (T, error) {
 	l.length--
 
 	return out, nil
+}
+
+func (l *DoublyLinkedList[T]) RemoveWhere(predicate func(item T, idx int) bool) (T, int, error) {
+	curr := l.head
+	i := 0
+	for curr != nil {
+		ok := predicate(curr.value, i)
+		if ok {
+			break
+		}
+		curr = curr.next
+		i++
+	}
+
+	if curr == nil {
+		v, err := createNotFoundError[T]()
+		return v, -1, err
+	}
+
+	return curr.value, i, nil
 }
 
 // BreakLinksAndFreeNode will break links and point node to nil.
