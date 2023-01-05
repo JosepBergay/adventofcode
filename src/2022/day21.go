@@ -15,11 +15,18 @@ type monkeyNumber struct {
 	operator string
 }
 
+func (m monkeyNumber) String() string {
+	if m.value != nil {
+		return fmt.Sprintf("%v: %v,", m.name, *m.value)
+	}
+	return fmt.Sprintf("%v: %v %v %v,", m.name, m.monkey1, m.operator, m.monkey2)
+}
+
 type day21 struct {
 	m map[string]*monkeyNumber
 }
 
-const rootMonkey = "root"
+const rootMonkeyName = "root"
 
 func init() {
 	Days[21] = &day21{}
@@ -85,13 +92,89 @@ func (d *day21) findMonkeyNumber(name string) int {
 }
 
 func (d *day21) Part1(input string) (string, error) {
-	n := d.findMonkeyNumber("root")
+	n := d.findMonkeyNumber(rootMonkeyName)
 
 	return fmt.Sprint(n), nil
 }
 
 func (d *day21) Part2(input string) (string, error) {
-	return "TODO", nil
+	var getHumanBranch func(*monkeyNumber) []*monkeyNumber
+
+	getHumanBranch = func(monkey *monkeyNumber) []*monkeyNumber {
+		if monkey.name == "humn" {
+			// Found ourselves!
+			branch := make([]*monkeyNumber, 1)
+			branch[0] = monkey
+			return branch
+		}
+
+		// monkey.value may be filled if we run Part1 first.
+		if monkey.monkey1 == "" && monkey.monkey2 == "" {
+			// Dead end
+			return nil
+		}
+
+		branchNames := [2]string{monkey.monkey1, monkey.monkey2}
+		for _, branchName := range branchNames {
+			if branch := getHumanBranch(d.m[branchName]); branch != nil {
+				// Found branch
+				// humanBranch = append(humanBranch, *input[branchName])
+				return append(branch, monkey)
+			}
+		}
+
+		return nil
+	}
+
+	rootMonkey := d.m[rootMonkeyName]
+
+	rootMonkey.operator = "="
+
+	humanBranch := getHumanBranch(rootMonkey)
+
+	acc := 0
+
+	// Human branch starts with `humn` and ends with `root` so we loop in reverse order.
+	for i := len(humanBranch) - 1; i > 0; i-- {
+		curr := humanBranch[i]
+		branches := [2]string{curr.monkey1, curr.monkey2}
+
+		// Get the branch that does not contain human.
+		for j, b := range branches {
+			if humanBranch[i-1].name != b {
+				// Compute number for the other branche.
+				num := d.findMonkeyNumber(b)
+
+				// Isolate x
+				switch curr.operator {
+				case "=":
+					acc = num
+				case "+":
+					acc = acc - num
+				case "-":
+					if j == 0 {
+						// num - x = curr
+						acc = num - acc
+					} else {
+						// x - num = curr
+						acc = acc + num
+					}
+				case "*":
+					acc = acc / num
+				case "/":
+					if j == 0 {
+						// num / x = curr
+						acc = num / acc
+					} else {
+						// x / num = curr
+						acc = acc * num
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Sprint(acc), nil
 }
 
 func (d *day21) Exec(input string) (*DayResult, error) {
