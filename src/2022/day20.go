@@ -4,6 +4,7 @@ import (
 	"aoc2022/utils"
 	"bufio"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -37,42 +38,77 @@ func (d *day20) Parse(input string) ([]int, error) {
 type node struct {
 	value     int
 	processed bool
+	order     int
 }
 
-func (d *day20) Part1(input []int) (string, error) {
+func (n node) String() string {
+	return fmt.Sprint(n.value)
+}
+
+func findNodeIdxInOriginalOrder(list utils.DoublyLinkedList[node], value int, processed bool) int {
+	minOrder := math.MaxInt
+	idx := -1
+	list.Traverse(func(item node, i int) bool {
+		if item.value == value && item.processed == processed && item.order < minOrder {
+			minOrder = item.order
+			idx = i
+		}
+		return false
+	})
+	return idx
+}
+
+func getGrooveCoordinates(input []int, rounds int) (int, error) {
 	// Using a doubly linked list to avoid shifting values each time.
 	list := utils.DoublyLinkedList[node]{}
 
 	// Init list
-	for _, v := range input {
-		list.Append(node{v, false})
+	for i, v := range input {
+		list.Append(node{v, false, i})
 	}
 
-	for _, v := range input {
-		// 1.- Remove from current position and find index
-		i, err := list.Remove(node{v, false})
-		if err != nil {
-			return "", err
-		}
+	processed := false
+	maxIdx := len(input) - 1
+	for round := 0; round < rounds; round++ {
+		for _, v := range input {
+			// 1.- Find next node in order that is not yet processed
+			i := findNodeIdxInOriginalOrder(list, v, processed)
 
-		// 2.- Determine new index
-		newIdx := (i + v) % (len(input) - 1)
-		if newIdx < 0 {
-			newIdx += len(input) - 1
-		}
+			// 2.- Remove from current position
+			n, err := list.RemoveAt(i)
+			if err != nil {
+				return -1, err
+			}
 
-		// 3.- Insert at new index
-		err = list.InsertAt(node{v, true}, newIdx)
-		if err != nil {
-			fmt.Println(v, newIdx, i)
-			return "", err
+			// 3.- Mark it as processed
+			n.processed = !n.processed
+
+			if v == 0 {
+				list.InsertAt(n, i)
+				continue
+			}
+
+			// 4.- Determine new index
+			newIdx := (i + v) % maxIdx
+			if newIdx < 0 {
+				newIdx += maxIdx
+			}
+
+			// 5.- Insert at new index
+			err = list.InsertAt(n, newIdx)
+			if err != nil {
+				return -1, err
+			}
 		}
+		processed = !processed
 	}
 
 	// Get index of value 0
-	i, err := list.GetIndex(node{0, true})
+	_, i, err := list.Find(func(item node, idx int) bool {
+		return item.value == 0
+	})
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	out := 0
@@ -80,16 +116,37 @@ func (d *day20) Part1(input []int) (string, error) {
 	for _, c := range [3]int{i + 1000, i + 2000, i + 3000} {
 		n, err := list.Get(c % len(input))
 		if err != nil {
-			return "", err
+			return -1, err
 		}
 		out += n.value
 	}
 
-	return fmt.Sprint(out), nil
+	return out, nil
+}
+
+func (d *day20) Part1(input []int) (string, error) {
+	coords, err := getGrooveCoordinates(input, 1)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprint(coords), nil
 }
 
 func (d *day20) Part2(input []int) (string, error) {
-	return "TODO", nil
+	decryptionKey := 811589153
+
+	for i := 0; i < len(input); i++ {
+		v := input[i] * decryptionKey
+		input[i] = v
+	}
+
+	coords, err := getGrooveCoordinates(input, 10)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprint(coords), nil
 }
 
 func (d *day20) Exec(input string) (*DayResult, error) {
