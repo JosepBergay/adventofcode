@@ -142,7 +142,7 @@ func (d *day21) Part2(input string) (string, error) {
 		// Get the branch that does not contain human.
 		for j, b := range branches {
 			if humanBranch[i-1].name != b {
-				// Compute number for the other branche.
+				// Compute number for the other branches.
 				num := d.findMonkeyNumber(b)
 
 				// Isolate x
