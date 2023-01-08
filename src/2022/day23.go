@@ -6,24 +6,20 @@ import (
 	"strings"
 )
 
-var dirs = [4]Point{{0, -1}, {0, 1}, {-1, 0}, {1, 0}} // N, S, W, E
+type elfMap map[Point]*struct{}
 
-type elf struct{}
-
-type day23 struct {
-	elvesMap map[Point]*elf
-}
+type day23 struct{}
 
 func init() {
-	Days[23] = &day23{
-		elvesMap: make(map[Point]*elf),
-	}
+	Days[23] = &day23{}
 }
 
-func (d *day23) Parse(input string) (string, error) {
+func (d *day23) Parse(input string) (elfMap, error) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 
 	scanner.Split(bufio.ScanLines)
+
+	elvesMap := make(elfMap)
 
 	y := 0
 	for scanner.Scan() {
@@ -33,14 +29,14 @@ func (d *day23) Parse(input string) (string, error) {
 		for _, v := range line {
 			if v == '#' {
 				p := Point{x, y}
-				d.elvesMap[p] = nil
+				elvesMap[p] = nil
 			}
 			x++
 		}
 		y++
 	}
 
-	return "", nil
+	return elvesMap, nil
 }
 
 func getAdjacents(p Point) [8]Point {
@@ -58,9 +54,9 @@ func getAdjacents(p Point) [8]Point {
 	return [8]Point{n, s, e, w, nw, ne, sw, se}
 }
 
-func areAllPositionsEmpty(points []Point, elvesMap map[Point]*elf) bool {
+func areAllPositionsEmpty(points []Point, m elfMap) bool {
 	for _, p := range points {
-		if _, ok := elvesMap[p]; ok {
+		if _, ok := m[p]; ok {
 			return false
 		}
 	}
@@ -68,13 +64,13 @@ func areAllPositionsEmpty(points []Point, elvesMap map[Point]*elf) bool {
 	return true
 }
 
-func hasSomeAdjacents(p Point, elvesMap map[Point]*elf) bool {
+func hasSomeAdjacents(p Point, m elfMap) bool {
 	adj := getAdjacents(p)
 
-	return !areAllPositionsEmpty(adj[:], elvesMap)
+	return !areAllPositionsEmpty(adj[:], m)
 }
 
-func getNextValidPosition(p Point, elvesMap map[Point]*elf, lastDir int) Point {
+func getNextValidPosition(p Point, m elfMap, lastDir int) Point {
 	var next *Point
 
 	for i := 0; i < 4; i++ {
@@ -107,7 +103,7 @@ func getNextValidPosition(p Point, elvesMap map[Point]*elf, lastDir int) Point {
 				{p.x + 1, p.y + 1}}
 		}
 
-		if ok := areAllPositionsEmpty(mustCheck[:], elvesMap); ok {
+		if ok := areAllPositionsEmpty(mustCheck[:], m); ok {
 			next = &mustCheck[0]
 			break
 		}
@@ -120,48 +116,54 @@ func getNextValidPosition(p Point, elvesMap map[Point]*elf, lastDir int) Point {
 	return *next
 }
 
-func (d *day23) Part1(input string) (string, error) {
-	rounds := 10
+func moveElves(m elfMap, dirIdx int) int {
+	// First half
+	tmpMap := make(map[Point]Point) // map from next point to previous
+	repeated := make(map[Point]bool)
 
+	for p := range m {
+		yes := hasSomeAdjacents(p, m)
+		if !yes {
+			// The elf does not do anything
+			continue
+		}
+
+		next := getNextValidPosition(p, m, dirIdx)
+
+		if _, ok := tmpMap[next]; ok {
+			repeated[next] = true
+		}
+		tmpMap[next] = p
+	}
+
+	moved := 0
+
+	// Second half
+	for next, prev := range tmpMap {
+		if ok := repeated[next]; ok {
+			continue
+		}
+		delete(m, prev)
+		m[next] = nil
+		moved++
+	}
+
+	return moved
+}
+
+func (d *day23) Part1(input elfMap) (string, error) {
 	var dirIdx int // index of proposed direction
 
+	rounds := 10
+
 	for i := 0; i < rounds; i++ {
-		// First half
-		tmpMap := make(map[Point]Point) // map from next point to previous
-		repeated := make(map[Point]bool)
-
-		for p := range d.elvesMap {
-			yes := hasSomeAdjacents(p, d.elvesMap)
-
-			var next Point
-			if !yes {
-				// The elf does not do anything
-				next = p
-			} else {
-				next = getNextValidPosition(p, d.elvesMap, dirIdx)
-			}
-
-			if _, ok := tmpMap[next]; ok {
-				repeated[next] = true
-			}
-			tmpMap[next] = p
-		}
-
-		// Second half
-		for next, prev := range tmpMap {
-			if ok := repeated[next]; ok {
-				continue
-			}
-			delete(d.elvesMap, prev)
-			d.elvesMap[next] = nil
-		}
-
+		moveElves(input, dirIdx)
 		dirIdx++
 		dirIdx %= 4
 	}
 
 	var minX, maxX, minY, maxY int
-	for p := range d.elvesMap {
+	for p := range input {
 		if p.x < minX {
 			minX = p.x
 		}
@@ -177,13 +179,26 @@ func (d *day23) Part1(input string) (string, error) {
 	}
 
 	surface := (maxX - minX + 1) * (maxY - minY + 1)
-	emptyTiles := surface - len(d.elvesMap)
+	emptyTiles := surface - len(input)
 
 	return fmt.Sprint(emptyTiles), nil
 }
 
-func (d *day23) Part2(input string) (string, error) {
-	return "TODO", nil
+func (d *day23) Part2(input elfMap) (string, error) {
+	var dirIdx int // index of proposed direction
+
+	round := 1
+
+	for {
+		if moved := moveElves(input, dirIdx); moved == 0 {
+			break
+		}
+		dirIdx++
+		dirIdx %= 4
+		round++
+	}
+
+	return fmt.Sprint(round), nil
 }
 
 func (d *day23) Exec(input string) (*DayResult, error) {
@@ -194,6 +209,13 @@ func (d *day23) Exec(input string) (*DayResult, error) {
 	}
 
 	part1, err := d.Part1(parsed)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// parse again because part1 modifies input
+	parsed, err = d.Parse(input)
 
 	if err != nil {
 		return nil, err
