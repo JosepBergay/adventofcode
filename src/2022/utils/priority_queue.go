@@ -46,7 +46,7 @@ func (pq *PriorityQueue[T]) Pop() any {
 }
 
 func (pq *PriorityQueue[T]) Insert(value *T, priority int) {
-	item := Item[T]{value, priority, 0}
+	item := &Item[T]{value, priority, 0}
 	heap.Push(pq, item)
 }
 
