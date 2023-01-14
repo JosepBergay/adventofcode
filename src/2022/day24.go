@@ -1,16 +1,21 @@
 package aoc2022
 
 import (
+	"aoc2022/utils"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
 )
 
+type blizzardMap map[Point][]rune
+
 type valleyMap struct {
 	start, end             Point
-	blizzards              map[Point][]rune // Blizzard motions at this point. > | v | < | ^
+	blizzards              blizzardMap // Blizzard motions at this point. > | v | < | ^
 	minX, maxX, minY, maxY int
+	cycle                  int // when blizzard map is repeated
+	curr                   Point
 }
 
 type day24 struct{}
@@ -23,7 +28,7 @@ func (d *day24) Parse(input string) (valleyMap, error) {
 	lines := strings.Split(strings.TrimRight(input, "\n"), "\n")
 
 	vm := valleyMap{}
-	vm.blizzards = make(map[Point][]rune)
+	vm.blizzards = make(blizzardMap)
 
 	for y := 0; y < len(lines); y++ {
 		for x := 0; x < len(lines[y]); x++ {
@@ -44,7 +49,47 @@ func (d *day24) Parse(input string) (valleyMap, error) {
 	vm.minX, vm.minY = 1, 1
 	vm.maxX, vm.maxY = len(lines[0])-2, len(lines)-2
 
+	// Find cycle in blizzard map (when we repeat the same blizzard config)
+	curr := vm.blizzards
+	i := 0
+	for {
+		blizzardMaps[i] = curr // update cache
+		next := vm.moveBlizzards(curr)
+		if vm.blizzards.isEqual(next) {
+			break
+		}
+		i++
+		curr = next
+	}
+
+	vm.cycle = len(blizzardMaps)
+
 	return vm, nil
+}
+
+var blizzardMaps = make(map[int]blizzardMap) // blizzard maps for each minute, acts as cache
+
+func (m blizzardMap) isEqual(m2 blizzardMap) bool {
+	if len(m) != len(m2) {
+		return false
+	}
+
+	for k, v := range m {
+		_, ok := m2[k]
+		if !ok {
+			return false
+		}
+		if len(v) != len(m2[k]) {
+			return false
+		}
+		for i, r := range v {
+			if r != m2[k][i] {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (vm *valleyMap) moveBlizzard(r rune, p Point) Point {
@@ -76,8 +121,8 @@ func (vm *valleyMap) moveBlizzard(r rune, p Point) Point {
 	return next
 }
 
-func (vm *valleyMap) moveBlizzards(from map[Point][]rune) map[Point][]rune {
-	dest := make(map[Point][]rune)
+func (vm *valleyMap) moveBlizzards(from blizzardMap) blizzardMap {
+	dest := make(blizzardMap)
 
 	for p, blizz := range from {
 		for _, r := range blizz {
@@ -87,6 +132,15 @@ func (vm *valleyMap) moveBlizzards(from map[Point][]rune) map[Point][]rune {
 	}
 
 	return dest
+}
+
+func (vm valleyMap) getBlizzardMapAt(minute int) blizzardMap {
+	// Optimization: get map from cache. This alone takes it down from ~24m to ~1s (on part1) wow!
+	nextMap := blizzardMaps[minute%vm.cycle]
+	if nextMap == nil {
+		panic("should be init in parse")
+	}
+	return nextMap
 }
 
 func (vm *valleyMap) isOutOfBounds(p Point) bool {
@@ -116,12 +170,11 @@ func prioritizeNextMoves(curr Point, end Point) []Point {
 	return next
 }
 
-var blizzardMaps = make(map[int]map[Point][]rune) // blizzard maps for each minute
-
 var seen = make(map[int]map[Point]bool) // decisions taken each minute
 var minSteps = math.MaxInt
 
-func (vm *valleyMap) crossValley(curr Point, step int, m map[Point][]rune) int {
+func (vm *valleyMap) crossValley(step int) int {
+	curr := vm.curr
 	if curr == vm.end { // reached end!
 		return step
 	}
@@ -130,7 +183,8 @@ func (vm *valleyMap) crossValley(curr Point, step int, m map[Point][]rune) int {
 		return 0
 	}
 
-	if _, ok := m[curr]; ok { // hit a blizzard
+	currMap := vm.getBlizzardMapAt(step)
+	if _, ok := currMap[curr]; ok { // hit a blizzard
 		return 0
 	}
 
@@ -138,7 +192,7 @@ func (vm *valleyMap) crossValley(curr Point, step int, m map[Point][]rune) int {
 		return 0
 	}
 
-	if seen[step][curr] { // been here at this point in time
+	if seen[step][curr] && curr != vm.start { // been here at this point in time
 		return 0
 	}
 
@@ -152,14 +206,9 @@ func (vm *valleyMap) crossValley(curr Point, step int, m map[Point][]rune) int {
 	seen[step][curr] = true
 
 	for _, next := range prioritizeNextMoves(curr, vm.end) {
-		// Optimization: get map from cache. This alone takes it down from ~24m to ~1s wow!
-		nextMap := blizzardMaps[step+1]
-		if nextMap == nil {
-			nextMap = vm.moveBlizzards(m)
-			blizzardMaps[step+1] = nextMap
-		}
-
-		steps := vm.crossValley(next, step+1, nextMap)
+		// nextMap := vm.getBlizzardMapAt(step+1)
+		vm.curr = next
+		steps := vm.crossValley(step + 1)
 		if steps != 0 && minSteps > steps {
 			minSteps = steps
 		}
@@ -168,14 +217,65 @@ func (vm *valleyMap) crossValley(curr Point, step int, m map[Point][]rune) int {
 	return minSteps
 }
 
+func (vm *valleyMap) crossValleyEfficiently(startAt int) int {
+	type PointMinute struct {
+		p   Point
+		min int
+	}
+
+	visited := make(map[PointMinute]bool)
+
+	queue := utils.PriorityQueue[PointMinute]{}
+	queue.Insert(&PointMinute{vm.start, startAt}, 0)
+
+	for queue.Len() > 0 {
+		pm := queue.Delete()
+
+		if pm.p == vm.end {
+			return pm.min + 1
+		}
+
+		nextMap := vm.getBlizzardMapAt(pm.min + 1)
+		for _, nextMove := range prioritizeNextMoves(pm.p, vm.end) {
+			if _, ok := nextMap[pm.p]; ok {
+				continue // hit a blizzard
+			}
+			if vm.isOutOfBounds(nextMove) && nextMove != vm.start && nextMove != vm.end {
+				continue
+			}
+			nextPm := PointMinute{p: nextMove, min: pm.min + 1}
+			if visited[nextPm] {
+				continue
+			}
+			visited[nextPm] = true
+
+			queue.Insert(&nextPm, getManhattanDistance(nextMove, vm.end)+nextPm.min)
+		}
+	}
+
+	return -1
+}
+
 func (d *day24) Part1(vm valleyMap) (string, error) {
-	steps := vm.crossValley(vm.start, 0, vm.blizzards)
+	vm.curr = vm.start
+	steps := vm.crossValley(0)
 
 	return fmt.Sprint(steps), nil
 }
 
-func (d *day24) Part2(input valleyMap) (string, error) {
-	return "TODO", nil
+func (d *day24) Part2(vm valleyMap) (string, error) {
+	// If we cross valley like P1 we run into stack overflow so let's do it "efficiently"
+	steps := vm.crossValleyEfficiently(0)
+
+	vm.start, vm.end = vm.end, vm.start // switch directions
+
+	steps = vm.crossValleyEfficiently(steps)
+
+	vm.start, vm.end = vm.end, vm.start // switch directions
+
+	steps = vm.crossValleyEfficiently(steps)
+
+	return fmt.Sprint(steps), nil
 }
 
 func (d *day24) Exec(input string) (*DayResult, error) {
