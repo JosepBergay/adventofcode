@@ -11,6 +11,8 @@ If you intend to use it you should set an env var in the shape of `SESSION_COOKI
 
 ## 2022
 
+Golang
+
 ### Build
 
 ```bash
@@ -38,6 +40,8 @@ air 1 2 # Will run day 1 and 2 each time you save a file
 ```
 
 ## 2021
+
+NodeJS
 
 ### Usage
 `npm run start`. Don't forget to install dependencies first, you fool!
