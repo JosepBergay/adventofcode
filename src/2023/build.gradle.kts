@@ -21,3 +21,15 @@ repositories {
 application {
     mainClass.set("aoc2023.MainKt")
 }
+
+tasks.withType<Jar> {
+    // Otherwise you'll get a "No main manifest attribute" error
+    manifest {
+        attributes["Main-Class"] = "aoc2023.MainKt"
+    }
+
+    // To add all of the dependencies otherwise a "NoClassDefFoundError" error
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}
