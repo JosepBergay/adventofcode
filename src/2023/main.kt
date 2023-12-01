@@ -8,7 +8,7 @@ import kotlin.time.measureTimedValue
 val url = "https://adventofcode.com"
 // "https://adventofcode.com/2022/day/%v/input"
 
-val year = 2022
+val year = 2023
 
 fun main(args: Array<String>) {
     val cookie = System.getenv("SESSION_COOKIE")
