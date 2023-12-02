@@ -18,6 +18,11 @@ repositories {
     mavenCentral() 
 }
 
+dependencies {
+    // Used to launch several aoc days concurrently
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+}
+
 application {
     mainClass.set("aoc2023.MainKt")
 }
