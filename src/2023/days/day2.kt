@@ -40,9 +40,20 @@ class Day2 : BaseDay(2) {
         }
     }
 
-    override fun part2(): String {
+    override fun part2(): Int {
+        return games.sumOf {
+            val setPower = mutableMapOf("red" to 0, "green" to 0, "blue" to 0)
 
-        return "TODO"
+            for (s in it.sets) {
+                for (p in setPower) {
+                    if (p.key in s.cubes && s.cubes[p.key]!! > p.value) {
+                        setPower[p.key] = s.cubes[p.key]!!
+                    }
+                }
+            }
+
+            setPower.values.reduce { acc, v -> acc * v }
+        }
     }
 }
 
