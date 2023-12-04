@@ -14,31 +14,44 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 """
 
 class Day4 : BaseDay(4) {
-    var input = listOf<String>()
+    var input = listOf<List<String>>()
+    var scratchCardCountMap = mutableMapOf<Int, Int>()
 
     override fun parse() {
-        input = inputPath.readLines()
-        // input = testInputD4.reader().readLines()
+        val regex = """\d+""".toRegex()
+
+        val lines = inputPath.readLines()
+        // val lines = testInputD4.reader().readLines()
+
+        input =
+                lines.withIndex().filter { it.value.isNotEmpty() }.map { (idx, line) ->
+                    line.split("|", ":")
+                            .drop(1)
+                            .let {
+                                regex.findAll(it.first()).map { it.value } to
+                                        regex.findAll(it.last()).map { it.value }
+                            }
+                            .let { (winning, nums) ->
+                                winning.filter { nums.contains(it) }.toList()
+                            }
+                            // Add to count for part2
+                            .also {
+                                var copies = scratchCardCountMap.get(idx) ?: 0
+                                scratchCardCountMap.put(idx, ++copies)
+
+                                for (i in idx + 1..idx + it.size) {
+                                    val v = (scratchCardCountMap.get(i) ?: 0) + copies
+                                    scratchCardCountMap.put(i, v)
+                                }
+                            }
+                }
     }
 
     override fun part1(): Int {
-        val regex = """\d+""".toRegex()
-
-        return input.filter { it.isNotEmpty() }.sumOf {
-            it.split("|", ":")
-                    .drop(1)
-                    .let {
-                        regex.findAll(it.first()).map { it.value } to
-                                regex.findAll(it.last()).map { it.value }
-                    }
-                    .let { (winning, nums) -> winning.filter { nums.contains(it) }.toList() }
-                    .let { if (it.size > 0) 2.0.pow(it.size - 1) else 0.0 }
-                    .toInt()
-        }
+        return input.sumOf { it.let { if (it.size > 0) 2.0.pow(it.size - 1) else 0.0 }.toInt() }
     }
 
-    override fun part2(): String {
-
-        return "TODO"
+    override fun part2(): Int {
+        return scratchCardCountMap.values.sum()
     }
 }
