@@ -180,12 +180,12 @@
       "\t\t}",
       "\t}",
       "",
-      "\toverride fun part1(): String {",
+      "\toverride fun part1(): Any {",
       "\t\t$3"
       "\t\treturn \"TODO\"",
       "\t}",
       "",
-      "\toverride fun part2(): String {",
+      "\toverride fun part2(): Any {",
       ""
       "\t\treturn \"TODO\"",
       "\t}",
