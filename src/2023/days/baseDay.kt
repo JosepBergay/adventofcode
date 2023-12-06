@@ -3,6 +3,7 @@ package aoc2023.days
 import java.net.URI
 import java.net.http.*
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
 
 interface IBaseDay {
     fun parse(): Unit
@@ -19,7 +20,8 @@ abstract class BaseDay(val day: Int) : IBaseDay {
         }
     }
 
-    val inputPath = Path("./days/inputs/day" + day + ".txt")
+    val inputsDirectory = Path("./days/inputs")
+    val inputPath = Path(inputsDirectory.toString(), "day$day.txt")
 
     fun fetchInput(url: String, cookie: String, year: Int) {
         val segments = listOf(url, year, "day", day, "input")
@@ -32,6 +34,8 @@ abstract class BaseDay(val day: Int) : IBaseDay {
                 HttpRequest.newBuilder().uri(uri).setHeader("cookie", "session=" + cookie).build()
 
         val client = HttpClient.newBuilder().build()
+
+        inputsDirectory.createDirectories() // Ensure directories are created.
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofFile(inputPath))
 
