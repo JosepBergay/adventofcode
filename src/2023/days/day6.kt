@@ -16,11 +16,11 @@ class Day6 : BaseDay(6) {
     }
 
     private fun countWinningRaces(time: Long, distance: Long): Int {
+        // d < n(t - n) (where n is time holding the button)
         return (1..time - 1).count { distance < it * (time - it) }
     }
 
     override fun part1(): Int {
-        // d < n(t - n) (where n is time holding the button)
         return times
                 .mapIndexed { i, it -> countWinningRaces(it.toLong(), distances[i].toLong()) }
                 .reduce { prev, curr -> prev * curr }
