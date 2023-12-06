@@ -21,13 +21,35 @@ repositories {
 dependencies {
     // Used to launch several aoc days concurrently
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    // testImplementation(kotlin("test"))
+    // testImplementation(kotlin("test-junit"))
 }
 
 application {
     mainClass.set("aoc2023.MainKt")
 }
 
+// kotlin {
+//     // jvm {
+//     //     testRuns["test"].executionTask.configure {
+//     //         useJUnitPlatform()
+//     //     }
+//     // }
+//     sourceSets {
+//         val main by getting {
+//             dependencies {
+//                 implementation(kotlin("test"))
+//             }
+//         }
+//     }
+// }
+
+// tasks.test {
+//     useJUnitPlatform()
+// }
+
 tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     // Otherwise you'll get a "No main manifest attribute" error
     manifest {
         attributes["Main-Class"] = "aoc2023.MainKt"
