@@ -21,15 +21,50 @@ data class CamelCardHand(
 
 class Day7 : BaseDay(7) {
     var lines = listOf<String>()
+    val allCardsMap = mutableMapOf<String, CamelCardHand>()
 
     override fun parse() {
-        // lines = testInputD7.reader().readLines().dropLast(1)
+        // lines = testInputD7.reader().readLines()
         lines = inputPath.readLines()
     }
 
-    override fun part1(): Any {
-        val allCardsMap = mutableMapOf<String, CamelCardHand>()
+    private fun getCardStrengthComparator(isPart1: Boolean): Comparator<String> {
+        return compareBy<String> {
+            allCardsMap.get(it)!!
+                    .cards
+                    .fold("") { acc, curr ->
+                        acc +
+                                when (curr) {
+                                    'A' -> 'F'
+                                    'K' -> 'E'
+                                    'Q' -> 'D'
+                                    'J' -> if (isPart1) 'C' else '1'
+                                    'T' -> 'B'
+                                    else -> curr
+                                }
+                    }
+                    .toInt(16)
+        }
+    }
 
+    private fun computeWinnings(sorted: List<String>): Int {
+        return sorted.withIndex().sumOf { (idx, curr) ->
+            allCardsMap.get(curr)!!.bid.toInt() * (idx + 1)
+        }
+    }
+
+    private fun getHandType(count: Map<Char, Int>): HandType {
+        return when (count.size) {
+            1 -> HandType.REPOKER
+            2 -> if (count.values.any { it == 4 }) HandType.POKER else HandType.FULL
+            3 -> if (count.values.any { it == 3 }) HandType.TRIO else HandType.DOUBLE_PAIR
+            4 -> HandType.PAIR
+            5 -> HandType.HIGH_CARD
+            else -> error("woot")
+        }
+    }
+
+    override fun part1(): Int {
         val camelCardTypeComparator =
                 compareBy<String> {
                     allCardsMap
@@ -41,19 +76,7 @@ class Day7 : BaseDay(7) {
                                             cards.forEach { merge(it, 1) { a, b -> a + b } }
                                         }
 
-                                val type =
-                                        when (count.size) {
-                                            1 -> HandType.REPOKER
-                                            2 ->
-                                                    if (count.values.any { it == 4 }) HandType.POKER
-                                                    else HandType.FULL
-                                            3 ->
-                                                    if (count.values.any { it == 3 }) HandType.TRIO
-                                                    else HandType.DOUBLE_PAIR
-                                            4 -> HandType.PAIR
-                                            5 -> HandType.HIGH_CARD
-                                            else -> error("woot")
-                                        }
+                                val type = getHandType(count)
 
                                 CamelCardHand(type, cards, bid, count)
                             }
@@ -61,34 +84,46 @@ class Day7 : BaseDay(7) {
                             .ordinal
                 }
 
-        val cardStrengthComparator =
-                compareBy<String> {
-                    allCardsMap.get(it)!!
-                            .cards
-                            .fold("") { acc, curr ->
-                                acc +
-                                        when (curr) {
-                                            'A' -> 'F'
-                                            'K' -> 'E'
-                                            'Q' -> 'D'
-                                            'J' -> 'C'
-                                            'T' -> 'B'
-                                            else -> curr
-                                        }
-                            }
-                            .toInt(16)
-                }
+        val sorted = lines.sortedWith(camelCardTypeComparator.then(getCardStrengthComparator(true)))
 
-        val sorted = lines.sortedWith(camelCardTypeComparator.then(cardStrengthComparator))
-
-        return sorted.withIndex().sumOf { (idx, curr) ->
-            allCardsMap.get(curr)!!.bid.toInt() * (idx + 1)
-        }
+        return computeWinnings(sorted)
     }
 
-    override fun part2(): Any {
+    override fun part2(): Int {
+        val camelCardTypeComparator =
+                compareBy<String> {
+                    val hand = allCardsMap.get(it)!! // Computed from part1
 
-        return "TODO"
+                    if ('J' in hand.count) {
+                        var max =
+                                hand.count.filter { it.key != 'J' }.maxByOrNull { it.value }?.let {
+                                    it.toPair()
+                                }
+
+                        if (max == null) {
+                            // JJJJJ
+                            max = 'A' to 5
+                        }
+
+                        val count =
+                                buildMap<Char, Int> {
+                                    for ((key, value) in hand.count) {
+                                        val pair =
+                                                if (key == 'J') max.first to value else key to value
+                                        merge(pair.first, pair.second) { a, b -> a + b }
+                                    }
+                                }
+
+                        getHandType(count).ordinal
+                    } else {
+                        hand.type.ordinal
+                    }
+                }
+
+        val sorted =
+                lines.sortedWith(camelCardTypeComparator.then(getCardStrengthComparator(false)))
+
+        return computeWinnings(sorted)
     }
 }
 
