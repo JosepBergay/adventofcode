@@ -3,20 +3,15 @@ package aoc2023.days
 import kotlin.io.path.readLines
 
 class Day8 : BaseDay(8) {
-    val input = mutableListOf<Int>()
+    var instructions: String = ""
+    var network = emptyMap<String, Pair<String, String>>()
 
     override fun parse() {
-        // for (line in inputPath.readLines()) {
-        //     line.toIntOrNull()?.let { input.add(it) }
-        // }
-    }
-
-    override fun part1(): Any {
         // val lines = testInputD8.reader().readLines()
         val lines = inputPath.readLines()
 
-        val instructions = lines[0]
-        val network =
+        instructions = lines[0]
+        network =
                 lines.drop(2)
                         .map {
                             val split = it.split(" = ")
@@ -24,7 +19,9 @@ class Day8 : BaseDay(8) {
                             split[0] to (left to right)
                         }
                         .toMap()
+    }
 
+    override fun part1(): Int {
         var curr = "AAA"
         var step = 0
 
@@ -39,15 +36,38 @@ class Day8 : BaseDay(8) {
         return step
     }
 
-    override fun part2(): Any {
+    override fun part2(): Long {
+        var currentNodes = network.keys.filter { it.endsWith('A') }
+        var acc = 1L
 
-        return "TODO"
+        for (i in currentNodes) {
+            var curr = i
+            var step = 0
+
+            while (!curr.endsWith('Z')) {
+                val dir = instructions[step % instructions.length]
+
+                curr = if (dir == 'L') network[curr]!!.first else network[curr]!!.second
+
+                step++
+            }
+
+            acc *= step / instructions.length
+        }
+
+        return acc * instructions.length
     }
 }
 
-val testInputD8 = """LLR
+val testInputD8 =
+        """LR
 
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
 """
