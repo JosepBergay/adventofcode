@@ -71,10 +71,7 @@ class Day7 : BaseDay(7) {
                             .getOrPut(it) {
                                 val (cards, bid) = it.split(" ")
 
-                                val count =
-                                        buildMap<Char, Int> {
-                                            cards.forEach { merge(it, 1) { a, b -> a + b } }
-                                        }
+                                val count = cards.groupingBy { it }.eachCount()
 
                                 val type = getHandType(count)
 
@@ -106,13 +103,10 @@ class Day7 : BaseDay(7) {
                         }
 
                         val count =
-                                buildMap<Char, Int> {
-                                    for ((key, value) in hand.count) {
-                                        val pair =
-                                                if (key == 'J') max.first to value else key to value
-                                        merge(pair.first, pair.second) { a, b -> a + b }
-                                    }
-                                }
+                                hand.count
+                                        .entries
+                                        .map { if (it.key == 'J') max else it.toPair() }
+                                        .toMap()
 
                         getHandType(count).ordinal
                     } else {
