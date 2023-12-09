@@ -20,9 +20,19 @@ class Day9 : BaseDay(9) {
         }
     }
 
-    override fun part2(): Any {
+    override fun part2(): Int {
+        return inputPath.readLines().sumOf {
+            val nums = it.split(" ").map { it.toInt() }
 
-        return "TODO"
+            val seqs = mutableListOf(nums)
+
+            while (!seqs.last().all { it == 0 }) {
+                seqs.add(seqs.last().zipWithNext() { a, b -> b - a })
+            }
+
+            val initial = 0 // Fixes overload ambiguity error ?!
+            seqs.foldRight(initial) { a, acc -> a.first() - acc }
+        }
     }
 }
 
