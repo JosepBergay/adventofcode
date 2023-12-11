@@ -1,6 +1,5 @@
 package aoc2023.days
 
-import kotlin.collections.mutableListOf
 import kotlin.io.path.readLines
 
 val testInputD3 =
@@ -16,27 +15,6 @@ val testInputD3 =
 .664.598..
 
 """
-
-data class Point(val x: Int, val y: Int)
-
-fun Point.getAdjacents(
-        width: Int,
-        height: Int = width,
-        withDiagonals: Boolean = false
-): List<Point> {
-    val directions = mutableListOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
-
-    if (withDiagonals) {
-        val diagonals = listOf(Point(1, 1), Point(-1, -1), Point(-1, 1), Point(1, -1))
-        directions.addAll(diagonals)
-    }
-
-    return directions.map { Point(x + it.x, y + it.y) }.filterOutOfBounds(width, height)
-}
-
-fun List<Point>.filterOutOfBounds(width: Int, height: Int = width): List<Point> {
-    return this.filter { it.x in 0..width && it.y in 0..height }
-}
 
 class Day3 : BaseDay(3) {
     var lines = listOf<String>()
