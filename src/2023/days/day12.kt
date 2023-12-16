@@ -4,11 +4,17 @@ import kotlin.io.path.readLines
 import kotlin.math.*
 
 class Day12 : BaseDay(12) {
-    var input = listOf<String>()
+    var input = listOf<Pair<String, List<Int>>>()
+    val cache = hashMapOf<Pair<String, List<Int>>, Long>()
 
     override fun parse() {
-        // input = testInputD12.reader().readLines()
-        input = inputPath.readLines()
+        // val lines = testInputD12.reader().readLines()
+        val lines = inputPath.readLines()
+        input =
+                lines.map {
+                    val (springs, groups) = it.split(" ")
+                    springs to groups.split(",").map { it.toInt() }
+                }
     }
 
     private fun validateRecord(springs: String, groups: List<Int>): Boolean {
@@ -18,7 +24,7 @@ class Day12 : BaseDay(12) {
                 newGroups.withIndex().all { (i, s) -> groups.size > i && s.length == groups[i] }
     }
 
-    private fun countArrangements(springs: String, groups: List<Int>): Int {
+    private fun countArrangementsBruteForce(springs: String, groups: List<Int>): Int {
         val unknownIdxs = springs.mapIndexedNotNull { i, c -> if (c == '?') i else null }
 
         val sb = StringBuilder(springs)
@@ -39,16 +45,50 @@ class Day12 : BaseDay(12) {
                 .count { validateRecord(it, groups) }
     }
 
-    override fun part1(): Int {
-        return input.sumOf {
-            val (springs, groups) = it.split(" ")
-            countArrangements(springs, groups.split(",").map { it.toInt() })
+    private fun countArrangements(springs: String, groups: List<Int>): Long {
+        if (springs.length == 0 && groups.size == 0) return 1 // Nothing left so it fits.
+        else if (springs.length == 0) return 0 // No springs but still got groups left.
+        else if (groups.size == 0) {
+            return if ('#' in springs) 0 else 1 // If there're no damaged springs it fits.
+        }
+
+        if (springs.length < groups.sum() + groups.size - 1) return 0 // Line is not long enough.
+
+        return cache.getOrPut(springs to groups) {
+            when (springs.first()) {
+                '.' -> countArrangements(springs.drop(1), groups)
+                '?' ->
+                        countArrangements("." + springs.drop(1), groups) +
+                                countArrangements("#" + springs.drop(1), groups)
+                '#' -> {
+                    val group = groups.first()
+
+                    // Check if group length contains undamaged spring.
+                    if (springs.slice(0 ..< group).any { it == '.' }) return 0
+
+                    // Check if at the end of the group there's another group.
+                    if (group < springs.length && springs[group] == '#') return 0
+
+                    return countArrangements(springs.drop(group + 1), groups.drop(1))
+                }
+                else -> error("woot")
+            }
         }
     }
 
-    override fun part2(): Any {
+    override fun part1(): Long {
+        return input.sumOf { countArrangements(it.first, it.second) }
+    }
 
-        return "TODO"
+    override fun part2(): Long {
+        val unfolded =
+                input.map { (s, g) ->
+                    val springs = (1..5).map { s }.joinToString("?")
+                    val groups = (1..5).flatMap { g }
+                    springs to groups
+                }
+
+        return unfolded.sumOf { countArrangements(it.first, it.second) }
     }
 }
 
