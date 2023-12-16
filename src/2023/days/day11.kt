@@ -21,13 +21,14 @@ class Day11 : BaseDay(11) {
                 }
     }
 
-    override fun part1(): Any {
-        val emptyRows = hashSetOf<Int>()
-        emptyRows += (0..height).filter { y -> (0..width).all { Point(it, y) !in galaxies } }
-        val emptyCols = hashSetOf<Int>()
-        emptyCols += (0..width).filter { x -> (0..height).all { Point(x, it) !in galaxies } }
+    private fun sumGalaxiesDistances(expandFactor: Int): Long {
+        val emptyRows =
+                (0..height).filter { y -> (0..width).all { Point(it, y) !in galaxies } }.toHashSet()
+        val emptyCols =
+                (0..width).filter { x -> (0..height).all { Point(x, it) !in galaxies } }.toHashSet()
 
-        var out = 0
+        var out = 0L
+        val galaxies = galaxies.toHashSet() // Copy
 
         while (galaxies.isNotEmpty()) {
             val gal = galaxies.first()
@@ -35,13 +36,11 @@ class Day11 : BaseDay(11) {
 
             val dist =
                     galaxies.sumOf { p ->
-                        gal.manhattan(p) +
-                                (0..abs(gal.x - p.x)).count {
-                                    emptyCols.contains(it + min(gal.x, p.x))
-                                } +
-                                (0..abs(gal.y - p.y)).count {
-                                    emptyRows.contains(it + min(gal.y, p.y))
-                                }
+                        gal.manhattan(p).toLong() + // <- THIS!
+                        (min(gal.x, p.x)..max(gal.x, p.x)).count { it in emptyCols } *
+                                        expandFactor +
+                                (min(gal.y, p.y)..max(gal.y, p.y)).count { it in emptyRows } *
+                                        expandFactor
                     }
             out += dist
         }
@@ -49,9 +48,12 @@ class Day11 : BaseDay(11) {
         return out
     }
 
-    override fun part2(): Any {
+    override fun part1(): Long {
+        return sumGalaxiesDistances(1)
+    }
 
-        return "TODO"
+    override fun part2(): Long {
+        return sumGalaxiesDistances(1_000_000 - 1)
     }
 }
 
