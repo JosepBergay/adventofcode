@@ -31,36 +31,30 @@ class Day13 : BaseDay(13) {
                 .map { it.index }
     }
 
+    private fun findLineOfReflection(idx: Int, lines: List<String>): List<Int> {
+        return getMirrorIndexes(idx, lines).filter {
+            validateReflection(lines.slice(if (idx == 0) 0..it else it..lines.size - 1))
+        }
+    }
+
     private fun findLineOfReflection(pattern: String): Pair<Boolean, Int> {
         val rows = pattern.reader().readLines()
 
-        var idx =
-                getMirrorIndexes(0, rows).asReversed().find {
-                    validateReflection(rows.slice(0..it))
-                }
+        var idx = findLineOfReflection(0, rows).firstOrNull()
 
         if (idx != null) return (false to 1 + idx / 2)
 
-        idx =
-                getMirrorIndexes(rows.size - 1, rows).find {
-                    validateReflection(rows.slice(it..rows.size - 1))
-                }
+        idx = findLineOfReflection(rows.size - 1, rows).firstOrNull()
 
         if (idx != null) return (false to idx + (rows.size - idx) / 2)
 
         val columns = getColumns(rows)
 
-        idx =
-                getMirrorIndexes(0, columns).asReversed().find {
-                    validateReflection(columns.slice(0..it))
-                }
+        idx = findLineOfReflection(0, columns).firstOrNull()
 
         if (idx != null) return (true to 1 + idx / 2)
 
-        idx =
-                getMirrorIndexes(columns.size - 1, columns).find {
-                    validateReflection(columns.slice(it..columns.size - 1))
-                }
+        idx = findLineOfReflection(columns.size - 1, columns).firstOrNull()
 
         if (idx != null) return (true to idx + (columns.size - idx) / 2)
 
