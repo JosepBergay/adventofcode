@@ -1,37 +1,36 @@
 package aoc2023.days
 
 import kotlin.io.path.readLines
+import kotlin.text.reversed
 
 class Day14 : BaseDay(14) {
-    val input = mutableListOf<Int>()
+    var input = listOf<String>()
 
-    override fun parse() {}
+    override fun parse() {
+        input = inputPath.readLines()
+        // input = testInputD14.reader().readLines()
+    }
 
     override fun part1(): Int {
-        val lines = inputPath.readLines()
-
-        return (0..lines[0].length - 1).sumOf {
+        return (0..input[0].length - 1).sumOf {
             var sum = 0
             var emptyIdx = -1
-            var emptyCapacity = 0
 
-            for (i in 0..lines.size - 1) {
-                when (lines[i][it]) {
+            for (i in 0..input.size - 1) {
+                when (input[i][it]) {
                     '#' -> {
                         emptyIdx = -1
-                        emptyCapacity = 0
                     }
                     '.' -> {
                         if (emptyIdx == -1) {
                             emptyIdx = i
                         }
-                        emptyCapacity++
                     }
                     'O' -> {
                         if (emptyIdx == -1) {
-                            sum += lines.size - i
+                            sum += input.size - i
                         } else {
-                            sum += lines.size - emptyIdx
+                            sum += input.size - emptyIdx
                             emptyIdx++
                         }
                     }
@@ -42,9 +41,87 @@ class Day14 : BaseDay(14) {
         }
     }
 
-    override fun part2(): Any {
+    private fun rollWest(lines: List<String>): List<String> {
+        var out = mutableListOf<String>()
 
-        return "TODO"
+        for (y in 0..lines.size - 1) {
+            var str = lines[y]
+            var emptyIdx = -1
+
+            for (x in 0..lines[y].length - 1) {
+                when (lines[y][x]) {
+                    '#' -> {
+                        emptyIdx = -1
+                    }
+                    '.' -> {
+                        if (emptyIdx == -1) {
+                            emptyIdx = x
+                        }
+                    }
+                    'O' -> {
+                        if (emptyIdx != -1) {
+                            // Swap chars
+                            str =
+                                    str.replaceRange(emptyIdx, emptyIdx + 1, "O")
+                                            .replaceRange(x, x + 1, ".")
+
+                            emptyIdx++
+                        }
+                    }
+                }
+            }
+
+            out.add(str)
+        }
+
+        return out
+    }
+
+    private fun spinCycle(lines: List<String>): List<String> {
+        var tmp = rollWest(lines.getColumns()).getColumns() // Roll North
+
+        tmp = rollWest(tmp)
+
+        tmp =
+                rollWest(tmp.getColumns().map { it.reversed() })
+                        .map { it.reversed() }
+                        .getColumns() // Roll South
+
+        tmp = rollWest(tmp.map { it.reversed() }).map { it.reversed() } // Roll East
+
+        return tmp
+    }
+
+    private fun getNorthSupportLoad(lines: List<String>): Int {
+        return lines.withIndex().sumOf { (i, line) -> line.count { it == 'O' } * (lines.size - i) }
+    }
+
+    override fun part2(): Int {
+        val cache = hashMapOf<List<String>, Int>()
+        var curr = input
+        cache.put(input, 0)
+
+        val max = 1_000_000_000
+
+        for (i in 1..max) {
+            curr = spinCycle(curr)
+
+            if (curr in cache) {
+                val cycleStart = cache.get(curr)!!
+                val cycleLength = i - cycleStart
+                val maxIdx = ((max - cycleStart) % cycleLength) + cycleStart
+
+                val key = cache.keys.find { cache[it] == maxIdx }
+
+                return getNorthSupportLoad(key!!)
+            } else {
+                cache.put(curr, i)
+            }
+        }
+
+        // No cycle?!
+        // return getNorthSupportLoad(curr)
+        error("No cycle found, uncomment line above!")
     }
 }
 
