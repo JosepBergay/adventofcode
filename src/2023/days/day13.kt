@@ -37,7 +37,7 @@ class Day13 : BaseDay(13) {
         }
     }
 
-    private fun findLineOfReflection(pattern: String): Pair<Boolean, Int> {
+    private fun findFirstLineOfReflection(pattern: String): Pair<Boolean, Int>? {
         val rows = pattern.reader().readLines()
 
         var idx = findLineOfReflection(0, rows).firstOrNull()
@@ -58,35 +58,64 @@ class Day13 : BaseDay(13) {
 
         if (idx != null) return (true to idx + (columns.size - idx) / 2)
 
-        error("woot")
+        return null
+    }
+
+    private fun findAllLinesOfReflection(pattern: String): List<Pair<Boolean, Int>> {
+        val rows = pattern.reader().readLines()
+        val columns = getColumns(rows)
+
+        return listOf(
+                        findLineOfReflection(0, rows).map { (false to 1 + it / 2) },
+                        findLineOfReflection(rows.size - 1, rows).map {
+                            (false to it + (rows.size - it) / 2)
+                        },
+                        findLineOfReflection(0, columns).map { (true to 1 + it / 2) },
+                        findLineOfReflection(columns.size - 1, columns).map {
+                            (true to it + (columns.size - it) / 2)
+                        }
+                )
+                .flatten()
     }
 
     override fun part1(): Int {
         return input.sumOf {
-            findLineOfReflection(it).let { (vertical, num) -> if (vertical) num else num * 100 }
+            findFirstLineOfReflection(it)!!.let { (vertical, num) ->
+                if (vertical) num else num * 100
+            }
         }
     }
 
     override fun part2(): Any {
+        return input.sumOf { pattern ->
+            val original = findFirstLineOfReflection(pattern)!!
 
-        return "TODO"
+            (0..pattern.length - 1)
+                    .mapNotNull { i ->
+                        val newC =
+                                if (pattern[i] == '#') "." else if (pattern[i] == '.') "#" else null
+
+                        newC?.let { pattern.replaceRange(i, i + 1, it) }
+                    }
+                    .mapNotNull { findAllLinesOfReflection(it).find { it != original } }
+                    .let { it.firstOrNull() ?: original }
+                    .let { if (it.first) it.second else it.second * 100 }
+        }
     }
 }
 
 val testInputD13 =
-        """###....##
-##......#
-####..###
-..#....#.
-###....##
-..######.
-##......#
-##......#
-###.##.##
-##.#.##.#
-###.##.##
-..######.
-..#....#.
+        """...#....#.##.
+##.##..###..#
+##.##..###..#
+...#....#.##.
+.#.##.....##.
+.##.#.#..####
+..#.##....##.
+#..#.#####..#
+#.####..#....
+..#####..####
+.###.###.#...
 """
 // val testInputD13 =
 //         """#.##..##.
