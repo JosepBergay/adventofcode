@@ -11,11 +11,6 @@ class Day13 : BaseDay(13) {
         // input = testInputD13.reader().readText().split("\n\n")
     }
 
-    private fun getColumns(rows: List<String>): List<String> {
-        if (rows.isEmpty()) return emptyList()
-        return (0..rows[0].length - 1).map { i -> rows.map { it[i] }.joinToString("") }
-    }
-
     private fun validateReflection(lines: List<String>): Boolean {
         if (lines.isEmpty()) return true
 
@@ -48,7 +43,7 @@ class Day13 : BaseDay(13) {
 
         if (idx != null) return (false to idx + (rows.size - idx) / 2)
 
-        val columns = getColumns(rows)
+        val columns = rows.getColumns()
 
         idx = findLineOfReflection(0, columns).firstOrNull()
 
@@ -63,7 +58,7 @@ class Day13 : BaseDay(13) {
 
     private fun findAllLinesOfReflection(pattern: String): List<Pair<Boolean, Int>> {
         val rows = pattern.reader().readLines()
-        val columns = getColumns(rows)
+        val columns = rows.getColumns()
 
         return listOf(
                         findLineOfReflection(0, rows).map { (false to 1 + it / 2) },

@@ -28,3 +28,8 @@ fun Point.getAdjacents(
 
     return directions.map { this + it }.filterOutOfBounds(width, height)
 }
+
+fun List<String>.getColumns(): List<String> {
+    if (this.isEmpty()) return emptyList()
+    return (0..this[0].length - 1).map { i -> this.map { it[i] }.joinToString("") }
+}
