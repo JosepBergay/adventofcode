@@ -86,7 +86,7 @@ class Day13 : BaseDay(13) {
         }
     }
 
-    override fun part2(): Any {
+    override fun part2(): Int {
         return input.sumOf { pattern ->
             val original = findFirstLineOfReflection(pattern)!!
 
