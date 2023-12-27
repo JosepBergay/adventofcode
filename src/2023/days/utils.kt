@@ -10,8 +10,11 @@ operator fun Point.minus(other: Point) = Point(x - other.x, y - other.y)
 
 fun Point.manhattan(other: Point) = abs(x - other.x) + abs(y - other.y)
 
+fun Point.isNotOutOfBounds(width: Int, height: Int = width) =
+        this.x in 0..width && this.y in 0..height
+
 fun List<Point>.filterOutOfBounds(width: Int, height: Int = width): List<Point> {
-    return this.filter { it.x in 0..width && it.y in 0..height }
+    return this.filter { it.isNotOutOfBounds(width, height) }
 }
 
 fun Point.getAdjacents(
