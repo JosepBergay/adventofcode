@@ -58,11 +58,11 @@ class Day16 : BaseDay(16) {
         }
     }
 
-    override fun part1(): Int {
+    private fun energizeTiles(initial: Pair<Point, Point>): Int {
         val seen = hashSetOf<Pair<Point, Point>>() // (Position, Direction)
 
         val queue = ArrayDeque<Pair<Point, Point>>()
-        queue.add(Point(0, 0) to Point(1, 0))
+        queue.add(initial)
 
         while (queue.isNotEmpty()) {
             val curr = queue.removeFirst()
@@ -73,17 +73,26 @@ class Day16 : BaseDay(16) {
 
             getMoves(curr.first, curr.second)
                     .map { it.first + it.second to it.second }
-                    // .also { println("pos $curr.first dir $curr.second: moves -> $it") }
-                    .filter { it.first.isNotOutOfBounds(width) && it !in seen }
+                    .filter { it.first.isNotOutOfBounds(width) }
                     .forEach { queue.addLast(it) }
         }
 
         return seen.distinctBy { it.first }.size
     }
 
-    override fun part2(): Any {
+    override fun part1(): Int {
+        return energizeTiles(Point(0, 0) to Point(1, 0))
+    }
 
-        return "TODO"
+    override fun part2(): Int {
+        val initial = buildList {
+            addAll((0..width).map { Point(it, 0) to Point(0, 1) }) // topRow
+            addAll((0..width).map { Point(it, height) to Point(0, -1) }) // botRow
+            addAll((0..height).map { Point(0, it) to Point(1, 0) }) // leftCol
+            addAll((0..height).map { Point(width, it) to Point(-1, 0) }) // rightCol
+        }
+
+        return initial.maxOf { energizeTiles(it) }
     }
 }
 
