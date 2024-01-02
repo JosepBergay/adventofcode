@@ -4,10 +4,14 @@ import java.util.PriorityQueue
 import kotlin.io.path.readLines
 
 data class CityBlock(val p: Point, val lastDir: Direction?, val dirCount: Int, val heatLoss: Int) {
-    fun getDirections(width: Int, height: Int): List<Direction> {
+    fun getDirections(width: Int, height: Int, dirCountRange: IntRange): List<Direction> {
         return Direction.entries
                 .filter { lastDir == null || it.p != Point(-lastDir.p.x, -lastDir.p.y) }
-                .filter { it != lastDir || dirCount < 2 }
+                .filter {
+                    lastDir == null ||
+                            if (it == lastDir) dirCount < dirCountRange.last
+                            else dirCount >= dirCountRange.first
+                }
                 .filter { (it.p + p).isNotOutOfBounds(width, height) }
     }
 }
@@ -31,7 +35,7 @@ class Day17 : BaseDay(17) {
         }
     }
 
-    private fun dijsktra(): Int {
+    private fun dijsktra(dirCountRange: IntRange): Int {
         val start = Point(0, 0)
         val end = Point(width, height)
 
@@ -43,15 +47,15 @@ class Day17 : BaseDay(17) {
         while (queue.isNotEmpty()) {
             val curr = queue.poll()
 
-            if (curr.p == end) return curr.heatLoss
+            if (curr.p == end && curr.dirCount >= dirCountRange.first) return curr.heatLoss
 
             val hash = Triple(curr.p, curr.lastDir, curr.dirCount)
             if (hash in visited) continue
             visited += hash
 
-            for (dir in curr.getDirections(width, height)) {
+            for (dir in curr.getDirections(width, height, dirCountRange)) {
                 val nextPoint = dir.p + curr.p
-                val dirCount = if (dir == curr.lastDir) curr.dirCount + 1 else 0
+                val dirCount = if (dir == curr.lastDir) curr.dirCount + 1 else 1
                 val heatLoss = curr.heatLoss + input[nextPoint]!!
                 queue += CityBlock(nextPoint, dir, dirCount, heatLoss)
             }
@@ -61,12 +65,11 @@ class Day17 : BaseDay(17) {
     }
 
     override fun part1(): Int {
-        return dijsktra()
+        return dijsktra(0..3)
     }
 
-    override fun part2(): Any {
-
-        return "TODO"
+    override fun part2(): Int {
+        return dijsktra(4..10)
     }
 }
 
