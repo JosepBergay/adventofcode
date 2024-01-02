@@ -17,12 +17,19 @@ fun List<Point>.filterOutOfBounds(width: Int, height: Int = width): List<Point> 
     return this.filter { it.isNotOutOfBounds(width, height) }
 }
 
+enum class Direction(val p: Point) {
+    EAST(Point(1, 0)),
+    WEST(Point(-1, 0)),
+    South(Point(0, 1)),
+    North(Point(0, -1)),
+}
+
 fun Point.getAdjacents(
         width: Int,
         height: Int = width,
         withDiagonals: Boolean = false
 ): List<Point> {
-    val directions = mutableListOf(Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1))
+    val directions = Direction.entries.map { it.p }.toMutableList()
 
     if (withDiagonals) {
         val diagonals = listOf(Point(1, 1), Point(-1, -1), Point(-1, 1), Point(1, -1))
