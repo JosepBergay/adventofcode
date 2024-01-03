@@ -8,16 +8,36 @@ data class PartRating(val x: Int, val m: Int, val a: Int, val s: Int) {
     }
 }
 
-data class Workflow(
-        val name: String,
-        val rules: List<Pair<((PartRating) -> Boolean), String>> // Condition to Next workflow name
+data class Rule(
+        val condition: ((PartRating) -> Boolean),
+        val nextWf: String,
+        val op: Char,
+        val letter: Char,
+        val operand: Int
 )
 
-class Day19 : BaseDay(19) {
-    val workflows = mutableMapOf<String, Workflow>()
-    val ratings = mutableListOf<PartRating>()
+private typealias Workflow = List<Rule>
 
-    private fun parseCondition(cond: String): (PartRating) -> Boolean {
+class Day19 : BaseDay(19) {
+    private val workflows = mutableMapOf<String, Workflow>()
+    private val ratings = mutableListOf<PartRating>()
+
+    private fun parseRule(rawRule: String): Rule {
+        var split = rawRule.split(":")
+
+        if (split.size == 1) {
+            val func =
+                    (fun(_: PartRating): Boolean {
+                        return true
+                    })
+            val nextWf = split[0]
+
+            return Rule(func, nextWf, '*', '*', -1)
+        }
+
+        val cond = split[0]
+        val nextWf = split[1]
+
         val firstLetter = cond.first()
         val op = cond.drop(1).first()
         val operand = cond.drop(2).toInt()
@@ -36,7 +56,7 @@ class Day19 : BaseDay(19) {
                     return if (op == '>') v > operand else v < operand
                 }
 
-        return func
+        return Rule(func, nextWf, op, firstLetter, operand)
     }
 
     override fun parse() {
@@ -52,22 +72,7 @@ class Day19 : BaseDay(19) {
                 // Workflow
                 val (name, rawRules) = l.split("{")
 
-                val rules =
-                        rawRules.dropLast(1).split(",").map {
-                            var split = it.split(":")
-
-                            if (split.size == 1) {
-                                val condition =
-                                        (fun(_: PartRating): Boolean {
-                                            return true
-                                        })
-                                condition to split[0]
-                            } else {
-                                parseCondition(split[0]) to split[1]
-                            }
-                        }
-
-                workflows[name] = Workflow(name, rules)
+                workflows[name] = rawRules.dropLast(1).split(",").map { parseRule(it) }
             }
         }
     }
@@ -78,7 +83,7 @@ class Day19 : BaseDay(19) {
         while (curr != "A" && curr != "R") {
             val wf = workflows[curr]!!
 
-            for ((condition, nextWf) in wf.rules) {
+            for ((condition, nextWf) in wf) {
                 if (condition(rating)) {
                     curr = nextWf
                     break
@@ -93,9 +98,54 @@ class Day19 : BaseDay(19) {
         return ratings.groupBy { execWorkflows(it) }["A"]?.sumOf { it.getRating() } ?: 0
     }
 
-    override fun part2(): Any {
+    private fun solveP2Rec(
+            wfName: String,
+            state: HashMap<Char, IntRange>
+    ): List<HashMap<Char, IntRange>> {
+        if (wfName == "A") return listOf(state)
 
-        return "TODO"
+        if (wfName == "R") return emptyList()
+
+        val out = mutableListOf<HashMap<Char, IntRange>>()
+
+        val wf = workflows[wfName]!!
+
+        for (rule in wf) {
+            if (rule.letter !in state) {
+                // Terminal state '*'
+                out.addAll(solveP2Rec(rule.nextWf, state))
+                continue
+            }
+
+            val range = state[rule.letter]!!
+            val newState = HashMap(state)
+
+            when (rule.op) {
+                '<' -> {
+                    newState[rule.letter] = range.first ..< rule.operand
+
+                    state[rule.letter] = rule.operand..range.last
+                }
+                '>' -> {
+                    newState[rule.letter] = rule.operand + 1..range.last
+
+                    state[rule.letter] = range.first..rule.operand
+                }
+            }
+
+            out.addAll(solveP2Rec(rule.nextWf, newState))
+        }
+
+        return out.toList()
+    }
+
+    override fun part2(): Long {
+        val initialWorkflow = "in"
+        val initialState = hashMapOf('x' to 1..4000, 'm' to 1..4000, 'a' to 1..4000, 's' to 1..4000)
+
+        val accepted = solveP2Rec(initialWorkflow, initialState)
+
+        return accepted.sumOf { it.values.fold(1L) { acc, curr -> acc * curr.count().toLong() } }
     }
 }
 
