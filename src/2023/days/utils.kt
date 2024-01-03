@@ -8,6 +8,8 @@ operator fun Point.plus(other: Point) = Point(x + other.x, y + other.y)
 
 operator fun Point.minus(other: Point) = Point(x - other.x, y - other.y)
 
+operator fun Point.times(other: Point) = Point(x * other.x, y * other.y)
+
 fun Point.manhattan(other: Point) = abs(x - other.x) + abs(y - other.y)
 
 fun Point.isNotOutOfBounds(width: Int, height: Int = width) =
