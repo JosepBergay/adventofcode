@@ -3,7 +3,7 @@ package aoc2023.days
 import kotlin.io.path.*
 import kotlin.math.*
 
-data class DigInstruction(val dir: Direction, val count: Int, val color: String)
+data class DigInstruction(val part1: Pair<Direction, Int>, val part2: Pair<Direction, Int>)
 
 class Day18 : BaseDay(18) {
     var input = listOf<DigInstruction>()
@@ -16,20 +16,30 @@ class Day18 : BaseDay(18) {
                 lines.map {
                     val (dir, count, color) = it.split(" ")
 
-                    val direction =
+                    val part1 =
                             when (dir) {
                                 "U" -> Direction.North
                                 "R" -> Direction.EAST
                                 "D" -> Direction.South
                                 "L" -> Direction.WEST
                                 else -> error("lies!")
-                            }
+                            } to count.toInt()
 
-                    DigInstruction(direction, count.toInt(), color.drop(1).dropLast(1))
+                    val part2 =
+                            when (color.dropLast(1).last()) {
+                                '0' -> Direction.EAST
+                                '1' -> Direction.South
+                                '2' -> Direction.WEST
+                                '3' -> Direction.North
+                                else -> error("woot")
+                            } to color.drop(2).dropLast(2).toInt(16)
+
+                    DigInstruction(part1, part2)
                 }
     }
 
-    override fun part1(): Int {
+    private fun part1FloodFill(): Int {
+        // Innefficient
         var minX = 0
         var minY = 0
         var maxX = 0
@@ -39,9 +49,10 @@ class Day18 : BaseDay(18) {
         var curr = Point(0, 0)
         trench += curr
 
-        for (instr in input) {
-            for (i in (1..instr.count)) {
-                curr = instr.dir.p + curr
+        for ((part1, _) in input) {
+            val (dir, count) = part1
+            for (i in (1..count)) {
+                curr = dir.p + curr
                 trench += curr
 
                 maxX = max(maxX, curr.x)
@@ -77,7 +88,7 @@ class Day18 : BaseDay(18) {
         return (maxX - minX + 1) * (maxY - minY + 1) - visited.size
     }
 
-    private fun shoelace(points: List<Point>): Long {
+    private fun shoelace(points: List<Point>, perimeter: Int): Long {
         val p = buildList {
             addAll(points)
             add(points.first())
@@ -85,36 +96,31 @@ class Day18 : BaseDay(18) {
 
         return p.windowed(2).sumOf { (a, b) ->
             a.x.toLong() * b.y.toLong() - b.x.toLong() * a.y.toLong()
-        } / 2
+        } / 2 + perimeter / 2 + 1
     }
 
-    override fun part2(): Long {
-        input =
-                input.map {
-                    val dir =
-                            when (it.color.last()) {
-                                '0' -> Direction.EAST
-                                '1' -> Direction.South
-                                '2' -> Direction.WEST
-                                '3' -> Direction.North
-                                else -> error("woot")
-                            }
-
-                    DigInstruction(dir, it.color.drop(1).dropLast(1).toInt(16), "")
-                }
+    private fun solve(input: List<Pair<Direction, Int>>): Long {
         val points = mutableListOf<Point>()
         var perimeter = 0
 
         var prev = Point(0, 0)
         points += prev
 
-        for (i in input) {
-            prev = Point(i.dir.p.x * i.count, i.dir.p.y * i.count) + prev
-            perimeter += i.count
+        for ((dir, count) in input) {
+            prev = Point(dir.p.x * count, dir.p.y * count) + prev
+            perimeter += count
             points += prev
         }
 
-        return shoelace(points) + perimeter / 2L + 1L
+        return shoelace(points, perimeter)
+    }
+
+    override fun part1(): Long {
+        return solve(input.map { it.part1 })
+    }
+
+    override fun part2(): Long {
+        return solve(input.map { it.part2 })
     }
 }
 
