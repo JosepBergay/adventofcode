@@ -79,7 +79,9 @@ class Day20 : BaseDay(20) {
         return Triple("", pulse, emptyList())
     }
 
-    private fun pushButtonOnce(): Pair<Long, Long> {
+    var cycleMap = mutableMapOf<String, Long>()
+
+    private fun pushButtonOnce(count: Long = -1L): Pair<Long, Long> {
         // Send low pulse to broadcaster.
         // Triple(source, pulse, destinations)
         var curr = listOf(Triple("button", false, listOf("broadcaster")))
@@ -91,12 +93,23 @@ class Day20 : BaseDay(20) {
             curr =
                     curr.flatMap { (source, pulse, destinations) ->
                         destinations.map {
-                            // println("$source -$pulse -> $it")
                             if (pulse) highCount++ else lowCount++
 
                             processPulse(source, it, pulse)
                         }
                     }
+
+            if (count == -1L) continue
+
+            // For part2
+            for ((source, pulse) in curr) {
+                if (!pulse) continue
+
+                if (source in cycleMap && cycleMap[source] == 0L) {
+                    // High pulse delivered to $source @ $count
+                    cycleMap[source] = count
+                }
+            }
         }
 
         return lowCount to highCount
@@ -115,9 +128,23 @@ class Day20 : BaseDay(20) {
         return low * high
     }
 
-    override fun part2(): Any {
+    override fun part2(): Long {
+        // Reset all modules to their default states.
+        parse()
 
-        return "TODO"
+        val parent = input.values.find { "rx" in it.destinations }
+
+        if (parent == null) return -1
+
+        cycleMap = parent.receivedPulses.keys.associate { it to 0L }.toMutableMap()
+
+        var count = 0L
+        while (cycleMap.any { it.value == 0L }) {
+            count++
+            pushButtonOnce(count)
+        }
+
+        return lcm(cycleMap.values.distinct())
     }
 }
 
