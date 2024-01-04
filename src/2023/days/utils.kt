@@ -45,3 +45,35 @@ fun List<String>.getColumns(): List<String> {
     if (this.isEmpty()) return emptyList()
     return (0..this[0].length - 1).map { i -> this.map { it[i] }.joinToString("") }
 }
+
+fun Collection<Any?>.println() {
+    for (l in this) {
+        println(l)
+    }
+}
+
+fun gcd(a: Int, b: Int): Int {
+    if (b == 0) return a
+    return gcd(b, a % b)
+}
+
+fun gcd(a: Long, b: Long): Long {
+    if (b == 0L) return a
+    return gcd(b, a % b)
+}
+
+fun lcm(a: Int, b: Int): Int {
+    return a * b / gcd(a, b)
+}
+
+fun lcm(a: Long, b: Long): Long {
+    return a * b / gcd(a, b)
+}
+
+fun lcm(nums: Collection<Int>): Int {
+    return nums.reduce { a, b -> lcm(a, b) }
+}
+
+fun lcm(nums: Collection<Long>): Long {
+    return nums.reduce { a, b -> lcm(a, b) }
+}
