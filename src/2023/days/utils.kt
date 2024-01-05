@@ -10,6 +10,12 @@ operator fun Point.minus(other: Point) = Point(x - other.x, y - other.y)
 
 operator fun Point.times(other: Point) = Point(x * other.x, y * other.y)
 
+fun Point.mod(num: Int) = Point(x.mod(num), y.mod(num))
+
+// operator fun Point.rem(other: Point) = Point(x % other.x, y % other.y)
+
+// operator fun Point.rem(other: Int) = Point(x % other, y % other)
+
 fun Point.manhattan(other: Point) = abs(x - other.x) + abs(y - other.y)
 
 fun Point.isNotOutOfBounds(width: Int, height: Int = width) =
