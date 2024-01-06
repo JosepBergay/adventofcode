@@ -47,6 +47,25 @@ fun Point.getAdjacents(
     return directions.map { this + it }.filterOutOfBounds(width, height)
 }
 
+data class Volume(val x: IntRange, val y: IntRange, val z: IntRange) {
+    // override fun toString(): String {
+    //     return "($x, $y, $z)"
+    // }
+
+    fun moveZ(deltaZ: Int): Volume {
+        return Volume(x, y, (z.first + deltaZ)..(z.last + deltaZ))
+    }
+
+    fun hasIntersectionXY(other: Volume): Boolean {
+        return x.hasIntersection(other.x) && y.hasIntersection(other.y)
+    }
+}
+
+fun IntRange.hasIntersection(other: IntRange): Boolean {
+    // return max(first, other.first) <= min(last, other.last)
+    return this.any { other.contains(it) }
+}
+
 fun List<String>.getColumns(): List<String> {
     if (this.isEmpty()) return emptyList()
     return (0..this[0].length - 1).map { i -> this.map { it[i] }.joinToString("") }
