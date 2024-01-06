@@ -1,9 +1,14 @@
 package aoc2023.days
 
+import kotlin.collections.hashMapOf
 import kotlin.io.path.readLines
 
 class Day22 : BaseDay(22) {
     var input = listOf<Volume>()
+    // Brick -> bricks above
+    val above = hashMapOf<Volume, HashSet<Volume>>()
+    // Brick -> bricks below
+    val below = hashMapOf<Volume, HashSet<Volume>>()
 
     override fun parse() {
         val lines = inputPath.readLines()
@@ -26,9 +31,7 @@ class Day22 : BaseDay(22) {
                             )
                         }
                         .sortedBy { it.z.first }
-    }
 
-    override fun part1(): Any {
         val stack = mutableListOf<Volume>()
 
         // Let it sand!!
@@ -47,18 +50,52 @@ class Day22 : BaseDay(22) {
             stack.add(moved)
         }
 
-        return stack.count { brick ->
-            val top = stack.filter { brick.z.last + 1 == it.z.first && it.hasIntersectionXY(brick) }
+        input = stack
 
-            top.all { t ->
-                stack.any { it != brick && brick.z.last == it.z.last && it.hasIntersectionXY(t) }
-            }
+        for (brick in input) {
+            above[brick] =
+                    input
+                            .filter {
+                                brick.z.last + 1 == it.z.first && it.hasIntersectionXY(brick)
+                            }
+                            .toHashSet()
+
+            below[brick] =
+                    input
+                            .filter {
+                                brick.z.first - 1 == it.z.last && it.hasIntersectionXY(brick)
+                            }
+                            .toHashSet()
         }
     }
 
-    override fun part2(): Any {
+    override fun part1(): Int {
+        return input.count { brick -> above[brick]!!.all { below[it]!!.any { it != brick } } }
+    }
 
-        return "TODO"
+    override fun part2(): Int {
+        var wouldFallCount = 0
+
+        for (brick in input) {
+            val falling = hashSetOf<Volume>()
+
+            val q = ArrayDeque<Volume>()
+            q += brick
+
+            while (q.isNotEmpty()) {
+                val curr = q.removeFirst()
+
+                falling += curr
+
+                val wouldFall = above[curr]!!.filter { below[it]!!.all { it in falling } }
+
+                q += wouldFall
+            }
+
+            wouldFallCount += falling.size - 1
+        }
+
+        return wouldFallCount
     }
 }
 
