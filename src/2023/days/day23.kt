@@ -1,6 +1,5 @@
 package aoc2023.days
 
-import kotlin.collections.hashMapOf
 import kotlin.io.path.readLines
 
 class Day23 : BaseDay(23) {
@@ -48,6 +47,10 @@ class Day23 : BaseDay(23) {
         stack.addLast(curr)
     }
 
+    private fun getValidAdjacents(p: Point): List<Point> {
+        return Direction.entries.map { it.p + p }.filter { it in input }
+    }
+
     override fun part1(): Any {
         val distances = hashMapOf<Point, Int>()
 
@@ -65,7 +68,7 @@ class Day23 : BaseDay(23) {
             val curr = stack.removeLast()
 
             if (distances[curr]!! != Int.MIN_VALUE) {
-                for (adj in Direction.entries.map { it.p + curr }.filter { it in input }) {
+                for (adj in getValidAdjacents(curr)) {
                     if (distances[adj]!! < distances[curr]!! + 1) {
                         distances[adj] = distances[curr]!! + 1
                     }
@@ -76,9 +79,84 @@ class Day23 : BaseDay(23) {
         return distances[end]!!
     }
 
-    override fun part2(): Any {
+    private fun makeGraph(): HashMap<Point, MutableList<Pair<Point, Int>>> {
+        val vertices = hashMapOf(start to mutableListOf<Pair<Point, Int>>(), end to mutableListOf())
 
-        return "TODO"
+        for (p in input.keys) {
+            if (getValidAdjacents(p).count() > 2) {
+                vertices[p] = mutableListOf()
+            }
+        }
+
+        for (v in vertices.keys.toList()) {
+            var curr = setOf(v)
+            val visited = hashSetOf(v)
+            var dist = 0
+
+            while (curr.isNotEmpty()) {
+                dist++
+
+                curr = buildSet {
+                    for (n in curr) {
+                        for (adj in getValidAdjacents(n).filter { it !in visited }) {
+                            if (adj in vertices) {
+                                vertices[v]!! += adj to dist
+                            } else {
+                                add(adj)
+                                visited += adj
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return vertices
+    }
+
+    override fun part2(): Any {
+        val graph = makeGraph()
+
+        var acc = 0
+
+        if (graph[start]!!.size == 1) {
+            val (n, d) = graph[start]!!.single()
+            graph.remove(start)
+            for (adj in graph.values) {
+                adj.removeIf { start == it.first }
+            }
+            start = n
+            acc += d
+        }
+
+        if (graph[end]!!.size == 1) {
+            val (n, d) = graph[end]!!.single()
+            graph.remove(end)
+            for (adj in graph.values) {
+                adj.removeIf { end == it.first }
+            }
+            end = n
+            acc += d
+        }
+
+        visited.clear()
+
+        fun findMax(p: Point, curr: Int): Int {
+            if (p == end) return curr
+
+            visited += p
+
+            val max =
+                    graph[p]!!.filter { it.first !in visited }.maxOfOrNull { (n, w) ->
+                        findMax(n, curr + w)
+                    }
+
+            visited -= p
+
+            return max ?: 0
+        }
+
+        return findMax(start, 0) + acc
     }
 }
 
