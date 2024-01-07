@@ -25,6 +25,7 @@ fun getDay(day: Int): BaseDay? {
         21 -> Day21()
         22 -> Day22()
         23 -> Day23()
+        24 -> Day24()
         else -> null
     }
 }
