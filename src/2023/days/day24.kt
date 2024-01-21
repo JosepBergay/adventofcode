@@ -1,6 +1,8 @@
 package aoc2023.days
 
+import java.math.BigInteger
 import kotlin.io.path.readLines
+import kotlin.toBigInteger
 
 class Day24 : BaseDay(24) {
     var input = mutableListOf<Pair<Point3, Point3>>()
@@ -62,9 +64,79 @@ class Day24 : BaseDay(24) {
         return count
     }
 
-    override fun part2(): Any {
+    private fun determinant(m: List<List<BigInteger>>): BigInteger {
+        if (m.isEmpty()) return BigInteger.ONE
 
-        return "TODO"
+        val r =
+                m.first().mapIndexed { i, it ->
+                    it * determinant(m.drop(1).map { it.filterIndexed { j, _ -> j != i } })
+                }
+
+        return r.foldIndexed(BigInteger.ZERO) { i, a, b -> if (i % 2 == 0) a + b else a - b }
+    }
+
+    override fun part2(): BigInteger {
+        // Inspired by:
+        // shahata5 @ https://www.reddit.com/r/adventofcode/comments/18pnycy/comment/khlrstp/
+
+        val A = mutableListOf<List<BigInteger>>()
+        val B = mutableListOf<BigInteger>()
+
+        val (p0, v0) = input[0]
+
+        repeat(3) {
+            val (pN, vN) = input[it + 1]
+
+            A.add(
+                    listOf(
+                            v0.y.toBigInteger() - vN.y.toBigInteger(),
+                            vN.x.toBigInteger() - v0.x.toBigInteger(),
+                            BigInteger.ZERO,
+                            pN.y.toBigInteger() - p0.y.toBigInteger(),
+                            p0.x.toBigInteger() - pN.x.toBigInteger(),
+                            BigInteger.ZERO
+                    )
+            )
+            B.add(
+                    p0.x.toBigInteger() * v0.y.toBigInteger() -
+                            p0.y.toBigInteger() * v0.x.toBigInteger() -
+                            pN.x.toBigInteger() * vN.y.toBigInteger() +
+                            pN.y.toBigInteger() * vN.x.toBigInteger()
+            )
+
+            A.add(
+                    listOf(
+                            v0.z.toBigInteger() - vN.z.toBigInteger(),
+                            BigInteger.ZERO,
+                            vN.x.toBigInteger() - v0.x.toBigInteger(),
+                            pN.z.toBigInteger() - p0.z.toBigInteger(),
+                            BigInteger.ZERO,
+                            p0.x.toBigInteger() - pN.x.toBigInteger()
+                    )
+            )
+            B.add(
+                    p0.x.toBigInteger() * v0.z.toBigInteger() -
+                            p0.z.toBigInteger() * v0.x.toBigInteger() -
+                            pN.x.toBigInteger() * vN.z.toBigInteger() +
+                            pN.z.toBigInteger() * vN.x.toBigInteger()
+            )
+        }
+
+        // Cramer
+        val detA = determinant(A)
+
+        val (prx, pry, prz) =
+                A.mapIndexed { i, _ ->
+                    determinant(
+                            A.mapIndexed { j, r ->
+                                val l = r.toMutableList()
+                                l[i] = B[j]
+                                l
+                            }
+                    ) / detA
+                }
+
+        return prx + pry + prz
     }
 }
 

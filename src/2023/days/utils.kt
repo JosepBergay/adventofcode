@@ -47,10 +47,12 @@ fun Point.getAdjacents(
     return directions.map { this + it }.filterOutOfBounds(width, height)
 }
 
+data class Point3(val x: Long, val y: Long, val z: Long)
+
 data class Volume(val x: IntRange, val y: IntRange, val z: IntRange) {
-    // override fun toString(): String {
-    //     return "($x, $y, $z)"
-    // }
+    override fun toString(): String {
+        return "($x, $y, $z)"
+    }
 
     fun moveZ(deltaZ: Int): Volume {
         return Volume(x, y, (z.first + deltaZ)..(z.last + deltaZ))
