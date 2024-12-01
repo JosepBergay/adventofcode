@@ -10,3 +10,8 @@ adventofcode
 
 # Ignore Gradle build output directory
 build
+
+
+# Added by cargo
+
+/target
