@@ -8,3 +8,5 @@ name = "adventofcode"
 path = "./src/2024/main.rs"
 
 [dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
