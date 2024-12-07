@@ -1,6 +1,8 @@
-use std::{env, error, fs, io};
-
+use days::{get_days, Day};
 use reqwest::StatusCode;
+use std::{env, error, fs, io, time::Instant};
+
+pub mod days;
 
 async fn fetch_day(n: u8) -> Result<String, reqwest::Error> {
     let cookie =
@@ -21,7 +23,7 @@ async fn fetch_day(n: u8) -> Result<String, reqwest::Error> {
     res.text().await
 }
 
-async fn run_day(n: u8) -> Result<String, Box<dyn error::Error>> {
+async fn get_input(n: u8) -> Result<String, Box<dyn error::Error>> {
     let dir_path = "src/2024/days";
 
     let file_path = format!("{dir_path}/day{n}.txt");
@@ -44,26 +46,47 @@ async fn run_day(n: u8) -> Result<String, Box<dyn error::Error>> {
         },
     };
 
-    // TODO: get day and run it
-    dbg!(Ok(input.len().to_string()))
+    Ok(input)
+}
+
+async fn run_day(n: u8, day: &Box<dyn Day>) -> Result<(), Box<dyn error::Error>> {
+    let input = get_input(n).await?;
+
+    let now = Instant::now();
+
+    let result = day.exec(input).expect(&format!("Error running day {n}"));
+
+    let elapsed = now.elapsed();
+
+    println!(
+        "Day {n}: [Part1]: {} [Part2]: {} ({:?})", // {:.2?}
+        result.part1, result.part2, elapsed
+    );
+
+    Ok(())
 }
 
 #[tokio::main]
 async fn main() {
     let args = env::args();
 
+    let days = get_days();
+
     for (i, arg) in args.enumerate() {
         if i == 0 {
             continue;
         }
 
+        // TODO: run in parallel
         let n = arg
             .parse::<u8>()
             .expect(format!("Invalid argument '{arg:}'.").as_str());
 
-        // TODO: run in parallel
-        let res = run_day(n).await.expect(&format!("Error running day {n}"));
+        let entry = days.get(&n);
 
-        println!("Day {n}: {res}");
+        let _ = match entry {
+            Some(day) => run_day(n, day).await,
+            None => panic!("Day {n} not implemented"),
+        };
     }
 }
