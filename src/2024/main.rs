@@ -73,7 +73,7 @@ async fn main() {
     let days = get_days();
 
     for (i, arg) in args.enumerate() {
-        if i == 0 {
+        if i == 0 || i < 1 || i > 25 {
             continue;
         }
 
@@ -86,7 +86,7 @@ async fn main() {
 
         let _ = match entry {
             Some(day) => run_day(n, day).await,
-            None => panic!("Day {n} not implemented"),
+            None => panic!("Day {n} was not added to map"),
         };
     }
 }
