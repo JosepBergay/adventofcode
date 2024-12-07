@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 use super::{baseday::DayResult, Day};
 
@@ -28,7 +28,7 @@ impl Day1 {
         (left, right)
     }
 
-    fn part1(&self, lists: (Vec<i32>, Vec<i32>)) -> i32 {
+    fn part1(&self, lists: &(Vec<i32>, Vec<i32>)) -> i32 {
         assert_eq!(lists.0.len(), lists.1.len());
 
         let mut left = lists.0.clone();
@@ -41,8 +41,28 @@ impl Day1 {
             .fold(0, |acc, (i, x)| acc + (x - right[i]).abs())
     }
 
-    fn part2(&self) -> Result<String, Box<dyn Error>> {
-        Ok(String::from("TODO"))
+    fn part2(&self, lists: (Vec<i32>, Vec<i32>)) -> i32 {
+        let mut left = HashMap::new();
+
+        for n in lists.0 {
+            let count = left.entry(n).or_insert(0);
+            *count += 1;
+        }
+
+        let mut right = HashMap::new();
+
+        for n in lists.1 {
+            let count = right.entry(n).or_insert(0);
+            *count += 1;
+        }
+
+        left.iter().fold(0, |acc, (k, v)| {
+            let value = right.entry(*k).or_default();
+
+            let aux = &*value * v * k;
+
+            acc + aux
+        })
     }
 }
 
@@ -50,12 +70,12 @@ impl Day for Day1 {
     fn exec(&self, input: String) -> Result<DayResult, Box<dyn Error>> {
         let parsed = self.parse_input(input);
 
-        let p1 = self.part1(parsed);
-        let p2 = self.part2()?;
+        let p1 = self.part1(&parsed);
+        let p2 = self.part2(parsed);
 
         Ok(DayResult {
             part1: p1.to_string(),
-            part2: p2,
+            part2: p2.to_string(),
         })
     }
 }
@@ -73,7 +93,25 @@ fn test_day1_p1() {
 
     let day = Day1::default();
     let parsed = day.parse_input(input);
-    let p1 = day.part1(parsed);
+    let res = day.part1(&parsed);
 
-    assert_eq!(p1, 11)
+    assert_eq!(res, 11)
+}
+
+#[test]
+fn test_day1_p2() {
+    let input = String::from(
+        "3   4
+4   3
+2   5
+1   3
+3   9
+3   3",
+    );
+
+    let day = Day1::default();
+    let parsed = day.parse_input(input);
+    let res = day.part2(parsed);
+
+    assert_eq!(res, 31)
 }
