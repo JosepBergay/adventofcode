@@ -5,6 +5,19 @@ use super::{baseday::DayResult, Day};
 #[derive(Default)]
 pub struct Day2 {}
 
+fn is_report_safe(report: &[i32]) -> bool {
+    let is_asc = report[0] < report[1];
+
+    report.windows(2).all(|levels| {
+        let diff = levels[0] - levels[1];
+        if is_asc {
+            -3 <= diff && diff <= -1
+        } else {
+            1 <= diff && diff <= 3
+        }
+    })
+}
+
 impl Day2 {
     fn parse_input(&self, input: String) -> Vec<Vec<i32>> {
         input
@@ -14,25 +27,26 @@ impl Day2 {
             .collect()
     }
 
-    fn part1(&self, parsed: &Vec<Vec<i32>>) -> i32 {
-        parsed.iter().fold(0, |acc, report| {
-            let is_asc = report[0] < report[1];
-
-            let is_safe = report.windows(2).all(|levels| {
-                let diff = levels[0] - levels[1];
-                if is_asc {
-                    -3 <= diff && diff <= -1
-                } else {
-                    1 <= diff && diff <= 3
-                }
-            });
-
-            acc + if is_safe { 1 } else { 0 }
-        })
+    fn part1(&self, parsed: &Vec<Vec<i32>>) -> usize {
+        parsed
+            .iter()
+            .filter(|report| is_report_safe(report))
+            .count()
     }
 
-    fn part2(&self, _parsed: Vec<Vec<i32>>) -> &str {
-        "TODO"
+    fn part2(&self, parsed: Vec<Vec<i32>>) -> usize {
+        parsed
+            .iter()
+            .filter(|report| {
+                for i in 0..report.len() {
+                    let sliced_report = [&report[..i], &report[i + 1..]].concat();
+                    if is_report_safe(&sliced_report) {
+                        return true;
+                    }
+                }
+                false
+            })
+            .count()
     }
 }
 
@@ -85,5 +99,5 @@ fn test_day2_p2() {
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 4)
 }
