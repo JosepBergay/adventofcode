@@ -28,8 +28,33 @@ impl Day3 {
         total
     }
 
-    fn part2(&self, _parsed: String) -> &str {
-        "TODO"
+    fn part2(&self, parsed: String) -> i32 {
+        let mut total = 0;
+
+        let mut is_enabled = true;
+        let mut instructions = parsed.as_str();
+
+        while instructions.len() > 0 {
+            let delimiter = if is_enabled { "don't()" } else { "do()" };
+            let found = instructions.split_once(delimiter);
+            match found {
+                None => {
+                    if is_enabled {
+                        total += self.part1(&String::from(instructions));
+                    }
+                    break;
+                }
+                Some((pre, post)) => {
+                    if is_enabled {
+                        total += self.part1(&String::from(pre));
+                    }
+                    is_enabled = !is_enabled;
+                    instructions = post;
+                }
+            }
+        }
+
+        total
     }
 }
 
@@ -62,11 +87,11 @@ fn test_day3_p1() {
 #[test]
 fn test_day3_p2() {
     let input =
-        String::from("xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))");
+        String::from("xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))");
 
     let day = Day3::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 48)
 }
