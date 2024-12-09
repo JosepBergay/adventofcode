@@ -95,12 +95,14 @@ impl Day4 {
 
                 let count = dirs
                     .iter()
-                    .filter_map(|dir| {
-                        parsed
-                            .get(*dir + curr)
-                            .take_if(|c| **c == 'M')
-                            .and(parsed.get(*dir * 2 + curr).take_if(|c| **c == 'A'))
-                            .and(parsed.get(*dir * 3 + curr).take_if(|c| **c == 'S'))
+                    .filter(|dir| {
+                        "MAS".chars().enumerate().all(|(i, c)| {
+                            let idx = (1 + i).try_into().unwrap();
+                            parsed
+                                .get(**dir * idx + curr)
+                                .filter(|l| **l == c)
+                                .is_some()
+                        })
                     })
                     .count();
 
