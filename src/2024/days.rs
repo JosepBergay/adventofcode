@@ -11,6 +11,8 @@ pub mod day1;
 pub mod day2;
 pub mod day3;
 pub mod day4;
+pub mod map2d;
+pub mod point2d;
 
 pub fn get_days() -> HashMap<u8, Box<dyn Day>> {
     let all_days = HashMap::from([
