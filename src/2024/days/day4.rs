@@ -1,67 +1,11 @@
-use std::{error::Error, fmt, ops};
+use std::error::Error;
 
+use super::map2d::Map2D;
+use super::point2d::Point2D;
 use super::{baseday::DayResult, Day};
 
 #[derive(Default)]
 pub struct Day4 {}
-
-#[derive(Copy, Clone, PartialEq)]
-struct Point2D {
-    x: i32,
-    y: i32,
-}
-
-impl ops::Add for Point2D {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self::Output {
-        Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl ops::Mul<i32> for Point2D {
-    type Output = Self;
-
-    fn mul(self, v: i32) -> Self::Output {
-        Self {
-            x: self.x * v,
-            y: self.y * v,
-        }
-    }
-}
-
-impl fmt::Debug for Point2D {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Point2D ({}, {})", self.x, self.y)
-    }
-}
-
-struct Map2D<T> {
-    map: Vec<Vec<T>>,
-}
-
-impl<T> Map2D<T> {
-    fn is_out_of_bounds(&self, p: Point2D) -> bool {
-        if p.y < 0 || self.map.len() <= p.y.try_into().unwrap() {
-            return true;
-        }
-
-        p.x < 0 || self.map[0].len() <= p.x.try_into().unwrap()
-    }
-
-    fn get(&self, p: Point2D) -> Option<&T> {
-        if self.is_out_of_bounds(p) {
-            None
-        } else {
-            let v = &self.map[usize::try_from(p.y).expect(format!("y {p:?}").as_str())]
-                [usize::try_from(p.x).expect(format!("x {p:?}").as_str())];
-            Some(v)
-        }
-    }
-}
 
 impl Day4 {
     fn parse_input(&self, input: String) -> Map2D<char> {
@@ -71,7 +15,7 @@ impl Day4 {
             .map(|line| line.chars().collect())
             .collect::<Vec<Vec<char>>>();
 
-        Map2D { map }
+        Map2D::new(map)
     }
 
     fn part1(&self, parsed: &Map2D<char>) -> usize {
@@ -82,32 +26,27 @@ impl Day4 {
 
         let mut total = 0;
 
-        for (y, line) in parsed.map.iter().enumerate() {
-            for (x, c) in line.iter().enumerate() {
-                if *c != 'X' {
-                    continue;
-                }
+        for curr in parsed.iter() {
+            let c = parsed.get(curr).unwrap();
 
-                let curr = Point2D {
-                    x: x.try_into().unwrap(),
-                    y: y.try_into().unwrap(),
-                };
-
-                let count = dirs
-                    .iter()
-                    .filter(|dir| {
-                        "MAS".chars().enumerate().all(|(i, c)| {
-                            let idx = (1 + i).try_into().unwrap();
-                            parsed
-                                .get(**dir * idx + curr)
-                                .filter(|l| **l == c)
-                                .is_some()
-                        })
-                    })
-                    .count();
-
-                total += count;
+            if *c != 'X' {
+                continue;
             }
+
+            let count = dirs
+                .iter()
+                .filter(|dir| {
+                    "MAS".chars().enumerate().all(|(i, c)| {
+                        let idx = (1 + i).try_into().unwrap();
+                        parsed
+                            .get(**dir * idx + curr)
+                            .filter(|l| **l == c)
+                            .is_some()
+                    })
+                })
+                .count();
+
+            total += count;
         }
 
         total
