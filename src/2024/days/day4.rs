@@ -52,8 +52,43 @@ impl Day4 {
         total
     }
 
-    fn part2(&self, _parsed: Map2D<char>) -> &str {
-        "TODO"
+    fn part2(&self, parsed: Map2D<char>) -> usize {
+        let dir1 = vec![Point2D { x: -1, y: -1 }, Point2D { x: 1, y: 1 }];
+        let dir2 = vec![Point2D { x: -1, y: 1 }, Point2D { x: 1, y: -1 }];
+
+        let mut total = 0;
+
+        for p in parsed.iter() {
+            let c = parsed.get(p).unwrap();
+
+            if *c != 'A' {
+                continue;
+            }
+
+            let candidate = dir1
+                .iter()
+                .filter_map(|d| parsed.get(p + *d))
+                .collect::<String>();
+
+            let aux = candidate.as_str();
+
+            if aux != "MS" && aux != "SM" {
+                continue;
+            }
+
+            let candidate = dir2
+                .iter()
+                .filter_map(|d| parsed.get(p + *d))
+                .collect::<String>();
+
+            let aux2 = candidate.as_str();
+
+            if aux2 == "MS" || aux2 == "SM" {
+                total += 1;
+            }
+        }
+
+        total
     }
 }
 
@@ -96,11 +131,23 @@ MXMXAXMASX
 
 #[test]
 fn test_day4_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX
+",
+    );
 
     let day = Day4::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 9)
 }
