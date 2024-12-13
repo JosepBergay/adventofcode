@@ -49,10 +49,12 @@ impl Day6 {
         let mut count = 0;
 
         let mut obstacles_set = HashSet::new();
+        let mut start = start;
+        let mut start_dir = 0;
 
         loop {
             let mut curr_pos = start;
-            let mut curr_dir = 0; // We start going up
+            let mut curr_dir = start_dir; // We start going up
             let mut seen = HashSet::new();
             let mut obstacle_pos: Option<Point2D> = None;
 
@@ -63,8 +65,17 @@ impl Day6 {
                     break;
                 }
 
-                if obstacle_pos.is_some_and(|p| p == curr_pos) || map.get(curr_pos).unwrap() == &'#'
-                {
+                let c = map.get(curr_pos).unwrap();
+
+                if obstacle_pos.is_none() && !obstacles_set.contains(&curr_pos) && c != &'#' {
+                    // Optimization: save pos+dir so next loop we start from here (~10s -> ~2.7s).
+                    start = curr_pos;
+                    start_dir = curr_dir;
+                    obstacle_pos = Some(curr_pos);
+                    obstacles_set.insert(curr_pos);
+                }
+
+                if obstacle_pos.is_some_and(|p| p == curr_pos) || c == &'#' {
                     // Get back and turn right
                     curr_pos -= dirs[curr_dir];
                     curr_dir = (curr_dir + 1) % 4;
@@ -73,11 +84,6 @@ impl Day6 {
                 }
 
                 curr_pos += dirs[curr_dir];
-
-                if obstacle_pos.is_none() && !obstacles_set.contains(&(curr_pos, curr_dir)) {
-                    obstacle_pos = Some(curr_pos);
-                    obstacles_set.insert((curr_pos, curr_dir));
-                }
             }
 
             if obstacle_pos.is_none() {
