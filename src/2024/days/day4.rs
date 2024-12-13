@@ -9,13 +9,7 @@ pub struct Day4 {}
 
 impl Day4 {
     fn parse_input(&self, input: String) -> Map2D<char> {
-        let map = input
-            .split('\n')
-            .filter(|line| !line.is_empty())
-            .map(|line| line.chars().collect())
-            .collect::<Vec<Vec<char>>>();
-
-        Map2D::new(map)
+        Map2D::<char>::from_string(input)
     }
 
     fn part1(&self, parsed: &Map2D<char>) -> usize {

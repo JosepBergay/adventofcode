@@ -9,6 +9,16 @@ impl<T> Map2D<T> {
         Map2D { map }
     }
 
+    pub fn from_string(input: String) -> Map2D<char> {
+        let map = input
+            .split('\n')
+            .filter(|line| !line.is_empty())
+            .map(|line| line.chars().collect())
+            .collect::<Vec<Vec<char>>>();
+
+        Map2D::new(map)
+    }
+
     pub fn is_out_of_bounds(&self, p: Point2D) -> bool {
         if p.y < 0 || self.map.len() <= p.y.try_into().unwrap() {
             return true;
