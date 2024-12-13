@@ -26,6 +26,17 @@ impl ops::AddAssign for Point2D {
     }
 }
 
+impl ops::Sub for Point2D {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
+    }
+}
+
 impl ops::SubAssign for Point2D {
     fn sub_assign(&mut self, rhs: Self) {
         *self = Self {
