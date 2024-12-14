@@ -68,25 +68,37 @@ async fn run_day(n: u8, day: &Box<dyn Day>) -> Result<(), Box<dyn error::Error>>
 
 #[tokio::main]
 async fn main() {
-    let args = env::args();
+    let args = env::args()
+        .skip(1)
+        .filter_map(|n| {
+            n.parse::<u8>()
+                .ok()
+                .and_then(|n| if 1 <= n && n <= 25 { Some(n) } else { None })
+        })
+        .collect::<Vec<_>>();
 
-    let days = get_days();
+    let day_map = get_days();
 
-    for (i, arg) in args.enumerate() {
-        if i == 0 || i < 1 || i > 25 {
-            continue;
-        }
+    let mut day_args: Vec<&u8> = if args.is_empty() {
+        day_map.keys().collect()
+    } else {
+        args.iter().collect()
+    };
 
-        // TODO: run in parallel
-        let n = arg
-            .parse::<u8>()
-            .expect(format!("Invalid argument '{arg:}'.").as_str());
+    day_args.sort();
 
-        let entry = days.get(&n);
+    println!("Running days: {day_args:?}");
+
+    let now = Instant::now();
+
+    for &day_num in &day_args {
+        let entry = day_map.get(day_num);
 
         let _ = match entry {
-            Some(day) => run_day(n, day).await,
-            None => panic!("Day {n} was not added to map"),
+            Some(day) => run_day(*day_num, day).await,
+            None => panic!("Day {day_num} was not added to map"),
         };
     }
+
+    println!("Ran {} days in {:?}", day_args.len(), now.elapsed());
 }
