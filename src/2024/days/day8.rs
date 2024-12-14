@@ -5,16 +5,11 @@ use std::{
 
 use super::{baseday::DayResult, map2d::Map2D, point2d::Point2D, Day};
 
-enum Tile {
-    Antenna(char),
-    Empty,
-}
-
 #[derive(Default)]
 pub struct Day8 {}
 
 impl Day8 {
-    fn parse_input(&self, input: String) -> (HashMap<char, Vec<Point2D>>, Map2D<Tile>) {
+    fn parse_input(&self, input: String) -> (HashMap<char, Vec<Point2D>>, Map2D<char>) {
         let mut antennas = HashMap::new();
 
         let map2d = Map2D::new(
@@ -24,18 +19,17 @@ impl Day8 {
                 .map(|(y, l)| {
                     l.chars()
                         .enumerate()
-                        .map(|(x, c)| match c {
-                            '.' => Tile::Empty,
-                            _ => {
+                        .map(|(x, c)| {
+                            if c != '.' {
                                 let points = antennas.entry(c).or_insert(vec![]);
 
                                 points.push(Point2D {
-                                    x: x.try_into().unwrap(),
-                                    y: y.try_into().unwrap(),
+                                    x: x as i32,
+                                    y: y as i32,
                                 });
-
-                                Tile::Antenna(c)
                             }
+
+                            c
                         })
                         .collect()
                 })
@@ -45,7 +39,7 @@ impl Day8 {
         (antennas, map2d)
     }
 
-    fn part1(&self, parsed: &(HashMap<char, Vec<Point2D>>, Map2D<Tile>)) -> usize {
+    fn part1(&self, parsed: &(HashMap<char, Vec<Point2D>>, Map2D<char>)) -> usize {
         let (antennas, map2d) = parsed;
 
         let mut antinodes = HashSet::new();
@@ -73,8 +67,35 @@ impl Day8 {
         antinodes.len()
     }
 
-    fn part2(&self, _parsed: (HashMap<char, Vec<Point2D>>, Map2D<Tile>)) -> &str {
-        "TODO"
+    fn part2(&self, parsed: (HashMap<char, Vec<Point2D>>, Map2D<char>)) -> usize {
+        let (antennas, map2d) = parsed;
+
+        let mut antinodes = HashSet::new();
+
+        for (_, points) in antennas {
+            if points.len() < 2 {
+                continue;
+            }
+
+            for (i, &p1) in points.iter().enumerate() {
+                for &p2 in points[(i + 1)..].iter() {
+                    let v = p2 - p1;
+
+                    let mut curr = p1;
+                    while !map2d.is_out_of_bounds(curr) {
+                        antinodes.insert(curr);
+                        curr += v;
+                    }
+                    curr = p2;
+                    while !map2d.is_out_of_bounds(curr) {
+                        antinodes.insert(curr);
+                        curr -= v;
+                    }
+                }
+            }
+        }
+
+        antinodes.len()
     }
 }
 
@@ -119,11 +140,25 @@ fn test_day8_p1() {
 
 #[test]
 fn test_day8_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "............
+........0...
+.....0......
+.......0....
+....0.......
+......A.....
+............
+............
+........A...
+.........A..
+............
+............
+",
+    );
 
     let day = Day8::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 34)
 }
