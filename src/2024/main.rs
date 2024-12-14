@@ -100,5 +100,7 @@ async fn main() {
         };
     }
 
-    println!("Ran {} days in {:?}", day_args.len(), now.elapsed());
+    if day_args.len() > 1 {
+        println!("Ran {} days in {:?}", day_args.len(), now.elapsed());
+    }
 }
