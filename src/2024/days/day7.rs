@@ -69,11 +69,17 @@ fn evaluate_p2(res: &i64, ops: &[i64], acc: i64) -> bool {
 
     evaluate_p2(res, &ops[1..], acc + op)
         || evaluate_p2(res, &ops[1..], acc * op)
-        || evaluate_p2(
-            res,
-            &ops[1..],
-            (acc.to_string() + &op.to_string()).parse::<i64>().unwrap(),
-        )
+        || evaluate_p2(res, &ops[1..], concat(acc, *op))
+}
+
+fn concat(a: i64, b: i64) -> i64 {
+    let mut offset = 1;
+
+    while offset <= b {
+        offset *= 10;
+    }
+
+    a * offset + b
 }
 
 impl Day for Day7 {
