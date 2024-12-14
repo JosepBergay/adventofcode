@@ -8,6 +8,7 @@ use day4::Day4;
 use day5::Day5;
 use day6::Day6;
 use day7::Day7;
+use day8::Day8;
 
 pub mod baseday;
 pub mod day1;
@@ -17,6 +18,7 @@ pub mod day4;
 pub mod day5;
 pub mod day6;
 pub mod day7;
+pub mod day8;
 pub mod map2d;
 pub mod point2d;
 
@@ -30,6 +32,8 @@ pub fn get_days() -> HashMap<u8, Box<dyn Day>> {
         (6, Box::new(Day6::default()) as Box<dyn Day>),
         (6, Box::new(Day6::default()) as Box<dyn Day>),
         (7, Box::new(Day7::default()) as Box<dyn Day>),
+        (7, Box::new(Day7::default()) as Box<dyn Day>),
+        (8, Box::new(Day8::default()) as Box<dyn Day>),
     ]);
 
     all_days
