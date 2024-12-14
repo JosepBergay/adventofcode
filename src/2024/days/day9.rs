@@ -24,29 +24,28 @@ impl Day9 {
             })
             .collect::<Vec<_>>();
 
-        let mut ordered = vec![];
+        let mut acc = 0;
         let mut idx = 0;
         let mut last_idx = aux.len();
 
         while idx < last_idx {
             let opt = aux[idx];
+
             if let Some(c) = opt {
-                ordered.push(c);
+                acc += idx * c
             } else if let Some((i, o)) = aux[idx..last_idx]
                 .iter()
                 .enumerate()
                 .rfind(|(_, &o)| o.is_some())
             {
-                ordered.push(o.unwrap());
+                acc += idx * o.unwrap();
                 last_idx = idx + i;
             }
+
             idx += 1;
         }
 
-        ordered
-            .iter()
-            .enumerate()
-            .fold(0, |acc, (i, v)| acc + i * (*v as usize))
+        acc
     }
 
     fn part2(&self, _parsed: String) -> usize {
