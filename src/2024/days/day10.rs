@@ -1,4 +1,7 @@
-use std::{collections::HashSet, error::Error};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+};
 
 use super::{baseday::DayResult, map2d::Map2D, point2d::Point2D, Day};
 
@@ -56,24 +59,51 @@ impl Day10 {
         count
     }
 
-    fn part2(&self, _parsed: (Vec<Point2D>, Vec<Point2D>, Map2D<u32>)) -> usize {
-        0
+    fn part2(&self, parsed: (Vec<Point2D>, Vec<Point2D>, Map2D<u32>)) -> usize {
+        let (heads, _, map) = parsed;
+
+        let mut count = 0;
+
+        for start in heads {
+            let mut map_count = HashMap::new();
+
+            walk_trail_2(start, &map, &mut map_count);
+
+            count += map_count.values().fold(0, |acc, i| acc + i);
+        }
+
+        count
     }
 }
 
-fn get_next_nodes<'a>(curr: Point2D, map: &Map2D<u32>) -> Vec<Point2D> {
+fn walk_trail_2(curr: Point2D, map: &Map2D<u32>, map_count: &mut HashMap<Point2D, usize>) -> bool {
+    if map.get(curr).is_some_and(|v| *v == 9) {
+        return true;
+    }
+
+    for node in get_next_nodes(curr, map) {
+        if walk_trail_2(node, map, map_count) {
+            let count = map_count.entry(node).or_insert(0);
+            *count += 1;
+        }
+    }
+
+    return false;
+}
+
+fn get_next_nodes(curr: Point2D, map: &Map2D<u32>) -> Vec<Point2D> {
     let dirs = vec![
-        &Point2D { x: 1, y: 0 },
-        &Point2D { x: -1, y: 0 },
-        &Point2D { x: 0, y: 1 },
-        &Point2D { x: 0, y: -1 },
+        Point2D { x: 1, y: 0 },
+        Point2D { x: -1, y: 0 },
+        Point2D { x: 0, y: 1 },
+        Point2D { x: 0, y: -1 },
     ];
 
     let i = map.get(curr).unwrap();
 
     dirs.iter()
         .filter_map(|&d| {
-            let p = curr + *d;
+            let p = curr + d;
             map.get(p).filter(|&j| i + 1 == *j).and(Some(p))
         })
         .collect()
@@ -152,5 +182,5 @@ fn test_day10_p2() {
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, 0)
+    assert_eq!(res, 81)
 }
