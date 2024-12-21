@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 use super::{baseday::DayResult, Day};
 
@@ -6,56 +6,68 @@ use super::{baseday::DayResult, Day};
 pub struct Day11 {}
 
 impl Day11 {
-    fn parse_input(&self, input: String) -> Vec<String> {
+    fn parse_input(&self, input: String) -> HashMap<usize, usize> {
         input
             .lines()
             .take(1)
             .collect::<String>()
             .split(" ")
-            .map(|s| String::from(s))
+            .map(|s| (s.parse::<usize>().unwrap(), 1))
             .collect()
     }
 
-    fn part1(&self, parsed: &Vec<String>) -> usize {
-        let mut curr = parsed.clone();
-
-        for _n in 0..25 {
-            // println!("{n} -> {curr:?}");
-            curr = blink(curr);
-        }
-
-        curr.len()
+    fn part1(&self, parsed: &HashMap<usize, usize>) -> usize {
+        blink(25, parsed.clone())
     }
 
-    fn part2(&self, _parsed: Vec<String>) -> &str {
-        "TODO"
+    fn part2(&self, parsed: HashMap<usize, usize>) -> usize {
+        blink(75, parsed)
     }
 }
 
-fn blink(curr: Vec<String>) -> Vec<String> {
-    let mut out = vec![];
-
-    for s in curr {
-        if s == "0" {
-            out.push(String::from("1"));
-        } else if s.len() % 2 == 0 {
-            let (first, last) = s.split_at(s.len() / 2);
-
-            out.push(first.to_string());
-
-            let mut last = last.trim_start_matches("0");
-            if last == "" {
-                last = "0"
-            }
-            out.push(last.to_string());
-        } else {
-            let i = s.parse::<u64>().unwrap();
-
-            out.push((i * 2024).to_string());
-        }
+fn change_stone(stone: usize) -> (usize, Option<usize>) {
+    if stone == 0 {
+        return (1, None);
     }
 
-    out
+    let mut digits = 0;
+    let mut n = stone;
+    while n > 0 {
+        n /= 10;
+        digits += 1;
+    }
+
+    if digits % 2 == 0 {
+        let pow = 10_usize.pow(digits / 2);
+
+        return (stone / pow, Some(stone % pow));
+    }
+
+    (stone * 2024, None)
+}
+
+fn blink(iterations: usize, parsed: HashMap<usize, usize>) -> usize {
+    let mut dict = parsed;
+
+    for _n in 0..iterations {
+        let mut new_dict = HashMap::new();
+
+        for (stone, count) in dict {
+            let (first, second) = change_stone(stone);
+
+            let new_count = new_dict.entry(first).or_default();
+            *new_count += count;
+
+            if let Some(n) = second {
+                let new_count = new_dict.entry(n).or_default();
+                *new_count += count;
+            }
+        }
+
+        dict = new_dict;
+    }
+
+    dict.values().sum()
 }
 
 impl Day for Day11 {
@@ -94,5 +106,5 @@ fn test_day11_p2() {
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 0)
 }
