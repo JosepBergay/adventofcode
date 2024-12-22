@@ -11,11 +11,9 @@ use super::{baseday::DayResult, point2d::Point2D, Day};
 pub struct Day12 {}
 
 impl Day12 {
-    fn parse_input(&self, input: String) -> Map2D<char> {
-        Map2D::<char>::from_string(input)
-    }
+    fn parse_input(&self, input: String) -> (usize, usize) {
+        let map = Map2D::<char>::from_string(input);
 
-    fn part1(&self, map: &Map2D<char>) -> usize {
         let mut visited = HashSet::new();
         let dirs = vec![
             Point2D { x: 1, y: 0 },
@@ -23,7 +21,8 @@ impl Day12 {
             Point2D { x: 0, y: 1 },
             Point2D { x: 0, y: -1 },
         ];
-        let mut price = 0;
+        let mut price_p1 = 0;
+        let mut price_p2 = 0;
         let mut to_explore = vec![Point2D { x: 0, y: 0 }];
 
         while let Some(start) = to_explore.pop() {
@@ -34,6 +33,8 @@ impl Day12 {
             let plant = map.get(start).unwrap();
             let mut area = 0;
             let mut perimeter = 0;
+            let mut corners = 0;
+
             let mut q = VecDeque::from([start]);
 
             while let Some(curr) = q.pop_front() {
@@ -43,6 +44,7 @@ impl Day12 {
 
                 visited.insert(curr);
                 area += 1;
+                corners += count_corners(curr, &map);
 
                 for d in &dirs {
                     let p = *d + curr;
@@ -63,15 +65,49 @@ impl Day12 {
                 }
             }
 
-            price += area * perimeter;
+            price_p1 += area * perimeter;
+            price_p2 += area * corners;
         }
 
-        price
+        (price_p1, price_p2)
     }
 
-    fn part2(&self, _parsed: Map2D<char>) -> usize {
-        0
+    fn part1(&self, prices: &(usize, usize)) -> usize {
+        prices.0
     }
+
+    fn part2(&self, prices: (usize, usize)) -> usize {
+        prices.1
+    }
+}
+
+fn count_corners(curr: Point2D, map: &Map2D<char>) -> usize {
+    let dirs = vec![
+        Point2D { x: 0, y: -1 },
+        Point2D { x: 1, y: 0 },
+        Point2D { x: 0, y: 1 },
+        Point2D { x: -1, y: 0 },
+        Point2D { x: 0, y: -1 },
+    ];
+
+    let plant = map.get(curr);
+
+    let mut count = 0;
+
+    for pairs in dirs.windows(2) {
+        let dir1 = pairs[0];
+        let dir2 = pairs[1];
+
+        let p1 = map.get(curr + dir1);
+        let p2 = map.get(curr + dir2);
+        let diag = map.get(curr + dir1 + dir2);
+
+        if (p1 != plant && p2 != plant) || (p1 == plant && p2 == plant && diag != plant) {
+            count += 1;
+        }
+    }
+
+    count
 }
 
 impl Day for Day12 {
@@ -113,11 +149,23 @@ MMMISSJEEE
 
 #[test]
 fn test_day12_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE
+",
+    );
 
     let day = Day12::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, 0)
+    assert_eq!(res, 1206)
 }
