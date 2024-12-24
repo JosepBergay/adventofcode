@@ -6,9 +6,9 @@ use super::{baseday::DayResult, Day};
 
 #[derive(Debug)]
 struct Machine {
-    a: (usize, usize),
-    b: (usize, usize),
-    goal: (usize, usize),
+    a: (f64, f64),
+    b: (f64, f64),
+    goal: (f64, f64),
 }
 
 #[derive(Default)]
@@ -28,7 +28,7 @@ Prize: X=(\d+), Y=(\d+)",
         for capture in re.captures_iter(&input) {
             let (_, digits) = capture.extract();
 
-            let [ax, ay, bx, by, px, py] = digits.map(|d| d.parse::<usize>().unwrap());
+            let [ax, ay, bx, by, px, py] = digits.map(|d| d.parse::<f64>().unwrap());
 
             machines.push(Machine {
                 a: (ax, ay),
@@ -44,30 +44,44 @@ Prize: X=(\d+), Y=(\d+)",
         let mut total = 0;
 
         for machine in parsed {
-            let mut count = usize::MAX;
-
-            for a in 0..100 {
-                for b in 0..100 {
-                    if a * machine.a.0 + b * machine.b.0 == machine.goal.0
-                        && a * machine.a.1 + b * machine.b.1 == machine.goal.1
-                    {
-                        let cost = a * 3 + b;
-                        count = count.min(cost)
-                    }
-                }
-            }
-
-            if count < usize::MAX {
-                total += count;
-            }
+            total += get_buttons_pushes_cost(machine, 0);
         }
 
         total
     }
 
-    fn part2(&self, _parsed: Vec<Machine>) -> usize {
-        0
+    fn part2(&self, parsed: Vec<Machine>) -> usize {
+        let diff = 10000000000000;
+
+        let mut total = 0;
+
+        for machine in parsed {
+            total += get_buttons_pushes_cost(&machine, diff);
+        }
+
+        total
     }
+}
+
+fn get_buttons_pushes_cost(machine: &Machine, diff: usize) -> usize {
+    let goal_x = machine.goal.0 + diff as f64;
+    let goal_y = machine.goal.1 + diff as f64;
+
+    // Through equation solving we know that:
+    let b = (goal_y * machine.a.0 - machine.a.1 * goal_x)
+        / (machine.b.1 * machine.a.0 - machine.a.1 * machine.b.0);
+
+    if b % 1.0 != 0.0 {
+        return 0;
+    }
+
+    let a = (goal_x - machine.b.0 * b) / machine.a.0;
+
+    if a % 1.0 != 0.0 {
+        return 0;
+    }
+
+    (a as usize) * 3 + (b as usize)
 }
 
 impl Day for Day13 {
@@ -114,7 +128,24 @@ Prize: X=18641, Y=10279
 
 #[test]
 fn test_day13_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
+
+Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176
+
+Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450
+
+Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279
+",
+    );
 
     let day = Day13::default();
     let parsed = day.parse_input(input);
