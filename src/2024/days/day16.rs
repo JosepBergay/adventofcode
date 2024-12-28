@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
+    collections::{BinaryHeap, HashMap, HashSet},
     error::Error,
 };
 
@@ -18,7 +18,7 @@ enum Tile {
 }
 
 impl Day16 {
-    fn parse_input(&self, input: String) -> (Point2D, Point2D, Map2D<Tile>) {
+    fn parse_input(&self, input: String) -> (usize, usize) {
         let mut map = vec![];
         let mut start = Point2D { x: 0, y: 0 };
         let mut end = Point2D { x: 0, y: 0 };
@@ -55,66 +55,100 @@ impl Day16 {
             map.push(map_row);
         }
 
-        (start, end, Map2D::new(map))
-    }
+        let map = Map2D::new(map);
 
-    fn part1(&self, parsed: &(Point2D, Point2D, Map2D<Tile>)) -> usize {
-        let (start, end, map) = parsed;
-
-        let mut distances = HashMap::new();
-        let mut prev = HashMap::new();
+        let mut lowest = usize::MAX;
+        let mut tiles: HashSet<Point2D> = HashSet::new();
+        let mut costs = HashMap::new();
         let mut queue = BinaryHeap::new();
 
-        distances.insert(*start, 0);
+        let mut path = Vec::new();
+        path.push(start);
         queue.push(NodeState {
             cost: 0,
             dir: Point2D { x: 1, y: 0 },
-            pos: *start,
+            pos: start,
+            path,
         });
 
-        while let Some(NodeState { cost, dir, pos }) = queue.pop() {
-            if pos == *end {
-                break;
+        while let Some(state) = queue.pop() {
+            let NodeState {
+                cost,
+                dir,
+                path,
+                pos,
+            } = state;
+
+            costs.insert((pos, dir), cost);
+
+            if pos == end {
+                if lowest < cost {
+                    break;
+                }
+                lowest = cost;
+                tiles.extend(&path);
             }
 
-            if distances.get(&pos).is_some_and(|c| cost > *c) {
+            if costs.get(&(pos, dir)).is_some_and(|c| cost > *c) {
                 continue;
             }
 
-            for node in map
-                .get_adjacent(pos)
-                .iter()
-                .filter(|&p| map.get(*p).is_some_and(|t| *t != Tile::Wall))
-            {
-                let next_dir = *node - pos;
-                let next_cost = cost + 1 + if next_dir != dir { 1000 } else { 0 };
+            let to_left = Point2D { x: dir.y, y: dir.x };
+            let to_right = Point2D {
+                x: -1 * dir.y,
+                y: -1 * dir.x,
+            };
 
-                if distances.get(&node).is_none_or(|c| next_cost < *c) {
+            let next_nodes = [(dir, 1), (to_left, 1001), (to_right, 1001)];
+
+            for (next_dir, cost_inc) in next_nodes {
+                let next_pos = pos + next_dir;
+
+                if map.get(next_pos).is_none_or(|t| *t == Tile::Wall) {
+                    continue;
+                }
+
+                let next_cost = cost + cost_inc;
+
+                if costs
+                    .get(&(next_pos, next_dir))
+                    .is_none_or(|c| next_cost < *c)
+                {
+                    let mut next_path = path.clone();
+                    next_path.push(next_pos);
+
                     queue.push(NodeState {
                         cost: next_cost,
                         dir: next_dir,
-                        pos: *node,
+                        pos: next_pos,
+                        path: next_path,
                     });
-                    distances.insert(*node, next_cost);
-                    prev.insert(*node, pos);
                 }
             }
         }
 
-        *distances.get(end).unwrap()
+        (lowest, tiles.len())
     }
 
-    fn part2(&self, _parsed: (Point2D, Point2D, Map2D<Tile>)) -> usize {
-        0
+    fn part1(&self, parsed: &(usize, usize)) -> usize {
+        let (lowest, _) = parsed;
+
+        *lowest
+    }
+
+    fn part2(&self, parsed: (usize, usize)) -> usize {
+        let (_, tiles_count) = parsed;
+
+        tiles_count
     }
 }
 
-// #[derive(Copy, Clone, Eq, PartialEq)]
 #[derive(Eq, PartialEq)]
 struct NodeState {
     cost: usize,
     dir: Point2D,
     pos: Point2D,
+    path: Vec<Point2D>,
 }
 
 impl Ord for NodeState {
