@@ -31,15 +31,23 @@ impl Day18 {
     fn part1(&self, parsed: &(Vec<Point2D>, Point2D), max_len: usize) -> usize {
         let (blocks, end) = parsed;
 
-        find_path_count_bfs(end, &blocks[..max_len])
+        find_path_count_bfs(end, &blocks[..max_len]).unwrap()
     }
 
-    fn part2(&self, _parsed: (Vec<Point2D>, Point2D)) -> &str {
-        "TODO"
+    fn part2(&self, parsed: (Vec<Point2D>, Point2D), max_len: usize) -> String {
+        let (blocks, end) = parsed;
+
+        for i in ((max_len + 1)..blocks.len()).rev() {
+            if find_path_count_bfs(&end, &blocks[..i]).is_some() {
+                return format!("{},{}", blocks[i].x, blocks[i].y);
+            }
+        }
+
+        panic!("Result not found")
     }
 }
 
-fn find_path_count_bfs(end: &Point2D, blocks: &[Point2D]) -> usize {
+fn find_path_count_bfs(end: &Point2D, blocks: &[Point2D]) -> Option<usize> {
     let mut q = VecDeque::new();
     q.push_back((Point2D { x: 0, y: 0 }, 0));
 
@@ -54,7 +62,7 @@ fn find_path_count_bfs(end: &Point2D, blocks: &[Point2D]) -> usize {
 
     while let Some((p, acc)) = q.pop_front() {
         if p == *end {
-            return acc;
+            return Some(acc);
         }
 
         for d in &dirs {
@@ -72,7 +80,7 @@ fn find_path_count_bfs(end: &Point2D, blocks: &[Point2D]) -> usize {
         }
     }
 
-    panic!("Result not found")
+    None
 }
 
 impl Day for Day18 {
@@ -80,7 +88,7 @@ impl Day for Day18 {
         let parsed = self.parse_input(input);
 
         let p1 = self.part1(&parsed, 1024);
-        let p2 = self.part2(parsed);
+        let p2 = self.part2(parsed, 1024);
 
         Ok(DayResult {
             part1: p1.to_string(),
@@ -89,9 +97,9 @@ impl Day for Day18 {
     }
 }
 
-#[test]
-fn test_day18_p1() {
-    let input = String::from(
+#[cfg(test)]
+fn get_test_input() -> String {
+    String::from(
         "5,4
 4,2
 4,5
@@ -118,7 +126,12 @@ fn test_day18_p1() {
 1,6
 2,0
 ",
-    );
+    )
+}
+
+#[test]
+fn test_day18_p1() {
+    let input = get_test_input();
 
     let day = Day18::default();
     let parsed = day.parse_input(input);
@@ -129,11 +142,11 @@ fn test_day18_p1() {
 
 #[test]
 fn test_day18_p2() {
-    let input = String::from("");
+    let input = get_test_input();
 
     let day = Day18::default();
     let parsed = day.parse_input(input);
-    let res = day.part2(parsed);
+    let res = day.part2(parsed, 12);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, "6,1")
 }
