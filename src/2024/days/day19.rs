@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error};
+use std::{collections::HashMap, error::Error};
 
 use super::{baseday::DayResult, Day};
 
@@ -6,66 +6,70 @@ use super::{baseday::DayResult, Day};
 pub struct Day19 {}
 
 impl Day19 {
-    fn parse_input(&self, input: String) -> (Vec<String>, Vec<String>) {
+    fn parse_input(&self, input: String) -> (usize, usize) {
         let mut lines = input.lines();
 
-        let patterns = lines
+        let mut patterns = lines
             .next()
             .unwrap()
             .split(", ")
             .map(|l| l.to_string())
-            .collect();
-
-        let towels = lines
-            .filter(|l| !l.is_empty())
-            .map(|l| l.to_string())
-            .collect();
-
-        (patterns, towels)
-    }
-
-    fn part1(&self, parsed: &(Vec<String>, Vec<String>)) -> usize {
-        let (mut patterns, towels) = parsed.clone();
+            .collect::<Vec<_>>();
 
         patterns.sort_by(|a, b| b.len().cmp(&a.len()));
 
-        towels
-            .iter()
-            .filter(|towel| {
-                find_patterns(
-                    towel,
-                    &patterns.iter().filter(|p| towel.contains(*p)).collect(),
-                    &mut HashSet::new(),
-                )
-            })
-            .count()
+        let mut p1 = 0;
+        let mut p2 = 0;
+        let cache = &mut HashMap::new();
+
+        for towel in lines.filter(|l| !l.is_empty()) {
+            let count = find_patterns(
+                &towel,
+                &patterns.iter().filter(|p| towel.contains(*p)).collect(),
+                cache,
+            );
+            p2 += count;
+            if count > 0 {
+                p1 += 1;
+            }
+        }
+
+        (p1, p2)
     }
 
-    fn part2(&self, _parsed: (Vec<String>, Vec<String>)) -> usize {
-        0
+    fn part1(&self, solution: &(usize, usize)) -> usize {
+        solution.0
+    }
+
+    fn part2(&self, solution: (usize, usize)) -> usize {
+        solution.1
     }
 }
 
 fn find_patterns<'a>(
     towel: &'a str,
     patterns: &Vec<&'a String>,
-    not_found: &mut HashSet<&'a str>,
-) -> bool {
+    cache: &mut HashMap<&'a str, usize>,
+) -> usize {
     if towel.is_empty() {
-        return true;
+        return 1;
     }
 
-    if not_found.contains(towel) {
-        return false;
+    if cache.contains_key(towel) {
+        return cache[towel];
     }
 
-    patterns.iter().filter(|&p| towel.starts_with(*p)).any(|p| {
-        let found = find_patterns(&towel[p.len()..], patterns, not_found);
-        if !found {
-            not_found.insert(&towel[p.len()..]);
-        }
-        found
-    })
+    patterns
+        .iter()
+        .filter(|&p| towel.starts_with(*p))
+        .map(|p| {
+            let count = find_patterns(&towel[p.len()..], patterns, cache);
+
+            cache.entry(&towel[p.len()..]).or_insert(count);
+
+            count
+        })
+        .sum()
 }
 
 impl Day for Day19 {
@@ -107,11 +111,23 @@ bbrgwb
 
 #[test]
 fn test_day19_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb
+",
+    );
 
     let day = Day19::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, 0)
+    assert_eq!(res, 16)
 }
