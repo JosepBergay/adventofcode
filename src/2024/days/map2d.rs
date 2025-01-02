@@ -37,6 +37,20 @@ impl<T> Map2D<T> {
         }
     }
 
+    pub fn get_adjacent(&self, curr: Point2D) -> Vec<Point2D> {
+        let dirs = vec![
+            Point2D { x: 1, y: 0 },
+            Point2D { x: -1, y: 0 },
+            Point2D { x: 0, y: 1 },
+            Point2D { x: 0, y: -1 },
+        ];
+
+        dirs.iter()
+            .map(|d| curr + *d)
+            .filter(|p| !self.is_out_of_bounds(*p))
+            .collect()
+    }
+
     pub fn iter(&self) -> Map2DIterator<T> {
         Map2DIterator {
             map2d: self,
