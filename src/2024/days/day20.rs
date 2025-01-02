@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet, VecDeque},
+    collections::{HashMap, VecDeque},
     error::Error,
 };
 
@@ -10,7 +10,7 @@ use super::{baseday::DayResult, point2d::Point2D, Day};
 #[derive(Default)]
 pub struct Day20 {}
 
-type Input = (Vec<Point2D>, Map2D<char>);
+type Input = (Vec<Point2D>, HashMap<Point2D, usize>);
 
 impl Day20 {
     fn parse_input(&self, input: String) -> Input {
@@ -28,7 +28,7 @@ impl Day20 {
         }
 
         let mut path = vec![];
-        let mut seen = HashSet::new();
+        let mut seen = HashMap::new();
 
         let mut q = VecDeque::new();
 
@@ -36,55 +36,51 @@ impl Day20 {
 
         while let Some(curr) = q.pop_front() {
             path.push(curr);
-            seen.insert(curr);
+            seen.insert(curr, path.len() - 1);
 
             if curr == end {
                 break;
             }
 
             for neigh in map.get_adjacent(curr) {
-                if *map.get(neigh).unwrap() != '#' && !seen.contains(&neigh) {
+                if *map.get(neigh).unwrap() != '#' && !seen.contains_key(&neigh) {
                     q.push_back(neigh);
                 }
             }
         }
 
-        (path, map)
+        (path, seen)
     }
 
     fn part1(&self, parsed: &Input, savings: usize) -> usize {
-        let (path, map) = parsed;
+        let (path, point_to_idx_map) = parsed;
 
-        let dists = get_points_at(2);
-
-        path[..path.len() - 2]
-            .iter()
-            .enumerate()
-            .flat_map(|(i, p)| {
-                dists
-                    .iter()
-                    .map(|d| *p + *d)
-                    .filter(move |&next| {
-                        map.get(next).is_some_and(|c| *c != '#')
-                            && path[i + 2..]
-                                .iter()
-                                .position(|it| *it == next)
-                                .is_some_and(|j| j >= savings)
-                    })
-                    .collect::<Vec<Point2D>>()
-            })
-            .count()
+        count_cheats(path, point_to_idx_map, 2, savings)
     }
 
     fn part2(&self, parsed: Input, savings: usize) -> usize {
-        let (path, map) = parsed;
+        let (path, point_to_idx_map) = parsed;
 
-        let cheat_dists: Vec<_> = (2..=20).flat_map(|n| get_points_at(n)).collect();
+        count_cheats(&path, &point_to_idx_map, 20, savings)
+    }
+}
 
-        let mut count = 0;
+fn count_cheats(
+    path: &Vec<Point2D>,
+    point_to_idx_map: &HashMap<Point2D, usize>,
+    cheat_max_distance: usize,
+    savings: usize,
+) -> usize {
+    let cheat_dists: Vec<_> = (2..=cheat_max_distance)
+        .flat_map(|n| get_points_at(n as i32))
+        .collect();
 
-        for (i, p) in path.iter().enumerate() {
-            let cheat_ends = cheat_dists.iter().filter(|&d| {
+    let mut count = 0;
+
+    for (i, p) in path[..path.len() - 2].iter().enumerate() {
+        count += cheat_dists
+            .iter()
+            .filter(|&d| {
                 let dist = (d.x.abs() + d.y.abs()) as usize;
 
                 if dist > path.len() - i {
@@ -92,18 +88,15 @@ impl Day20 {
                 }
 
                 let next = *p + *d;
-                map.get(next).is_some_and(|c| *c != '#')
-                    && path[i + dist..]
-                        .iter()
-                        .position(|it| *it == next)
-                        .is_some_and(|j| j >= savings)
-            });
 
-            count += cheat_ends.count();
-        }
-
-        count
+                point_to_idx_map
+                    .get(&next)
+                    .is_some_and(|&end_idx| end_idx > i && (end_idx - i - dist) >= savings)
+            })
+            .count();
     }
+
+    count
 }
 
 fn get_points_at(manhattan_dist: i32) -> Vec<Point2D> {
