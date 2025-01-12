@@ -91,3 +91,12 @@ pub fn cmp_by_manhattan_distance(
         std::cmp::Ordering::Equal
     }
 }
+
+pub fn get_orthogonal_directions() -> Vec<Point2D> {
+    vec![
+        Point2D { x: 1, y: 0 },
+        Point2D { x: -1, y: 0 },
+        Point2D { x: 0, y: 1 },
+        Point2D { x: 0, y: -1 },
+    ]
+}
