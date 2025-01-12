@@ -26,34 +26,23 @@ impl Day21 {
 
     fn part1(&self, parsed: &Input) -> usize {
         let numeric_start = Point2D::new(2, 3);
-        let directional_start = Point2D::new(2, 0);
+        let _directional_start = Point2D::new(2, 0);
 
         let mut complexity_sum = 0;
+
+        let cache = &mut HashMap::new();
 
         for code in parsed {
             let mut min_moves = usize::MAX;
 
             for moves in get_numeric_keypad_moves(numeric_start, code) {
-                // print_moves(&moves);
-                // println!("{moves:?}");
-                for moves in get_directional_keypad_moves(directional_start, moves) {
-                    // print_moves(&moves);
-                    // println!("{moves:?}");
-                    let moves = get_directional_keypad_moves(directional_start, moves);
-
-                    min_moves = min_moves.min(moves.iter().map(|m| m.len()).min().unwrap());
-                }
-                // print_moves(&moves);
-                // println!("{moves:?}");
+                let count = find_fewest_button_presses_count(2, &moves, cache);
+                min_moves = min_moves.min(count);
             }
 
             let numeric_part = code[..code.len() - 1].parse::<usize>().unwrap();
 
-            // println!("Code [{code}] num: {}, len: {}", numeric_part, min_moves);
-
             complexity_sum += min_moves * numeric_part;
-
-            // panic!("fok")
         }
 
         complexity_sum
@@ -62,6 +51,53 @@ impl Day21 {
     fn part2(&self, _parsed: Input) -> &str {
         "TODO"
     }
+}
+
+fn find_fewest_button_presses_count(
+    robot_count: usize,
+    path: &Vec<Point2D>,
+    cache: &mut HashMap<(Point2D, Point2D, usize), usize>,
+) -> usize {
+    if robot_count == 0 {
+        return path.len();
+    }
+
+    let empty_space = Point2D::new(0, 0);
+    let mut curr = Point2D::new(2, 0); // Always start at 'A'
+    let mut count = 0;
+
+    for dir in path {
+        let dest = match dir {
+            Point2D { x: 0, y: -1 } => Point2D::new(1, 0),
+            Point2D { x: 0, y: 0 } => Point2D::new(2, 0),
+            Point2D { x: -1, y: 0 } => Point2D::new(0, 1),
+            Point2D { x: 0, y: 1 } => Point2D::new(1, 1),
+            Point2D { x: 1, y: 0 } => Point2D::new(2, 1),
+            _ => panic!("Unknown button press"),
+        };
+
+        let key = (curr, dest, robot_count);
+
+        count += cache.get(&key).cloned().unwrap_or_else(|| {
+            let moves = get_unitary_moves(curr, dest, empty_space, 2, 1);
+
+            let val = moves
+                .iter()
+                .map(|next_path| {
+                    find_fewest_button_presses_count(robot_count - 1, next_path, cache)
+                })
+                .min()
+                .unwrap();
+
+            cache.insert(key, val);
+
+            val
+        });
+
+        curr = dest;
+    }
+
+    count
 }
 
 fn get_unitary_moves(
@@ -169,7 +205,7 @@ fn get_possible_paths(
  * | < | v | > |
  * +---+---+---+
  */
-fn get_directional_keypad_moves(start_pos: Point2D, presses: Vec<Point2D>) -> Vec<Vec<Point2D>> {
+fn _get_directional_keypad_moves(start_pos: Point2D, presses: Vec<Point2D>) -> Vec<Vec<Point2D>> {
     let empty_space = Point2D::new(0, 0);
 
     let mut curr = start_pos;
