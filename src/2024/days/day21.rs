@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     collections::{HashMap, VecDeque},
     error::Error,
+    hash::Hash,
 };
 
 use super::{
@@ -24,21 +25,20 @@ impl Day21 {
             .collect()
     }
 
-    fn part1(&self, parsed: &Input) -> usize {
-        let numeric_start = Point2D::new(2, 3);
-        let _directional_start = Point2D::new(2, 0);
-
+    fn solve(&self, parsed: &Input, robot_count: usize) -> usize {
         let mut complexity_sum = 0;
 
         let cache = &mut HashMap::new();
 
-        for code in parsed {
-            let mut min_moves = usize::MAX;
+        let numeric_keypad = get_numeric_keypad();
 
-            for moves in get_numeric_keypad_moves(numeric_start, code) {
-                let count = find_fewest_button_presses_count(2, &moves, cache);
-                min_moves = min_moves.min(count);
-            }
+        for code in parsed {
+            let min_moves = find_fewest_button_presses_count(
+                robot_count,
+                &code.chars().collect(),
+                cache,
+                &numeric_keypad,
+            );
 
             let numeric_part = code[..code.len() - 1].parse::<usize>().unwrap();
 
@@ -48,43 +48,113 @@ impl Day21 {
         complexity_sum
     }
 
-    fn part2(&self, _parsed: Input) -> &str {
-        "TODO"
+    fn part1(&self, parsed: &Input) -> usize {
+        self.solve(parsed, 3)
+    }
+
+    fn part2(&self, parsed: Input) -> usize {
+        self.solve(&parsed, 26)
     }
 }
 
-fn find_fewest_button_presses_count(
+struct Keypad<T> {
+    max_x: i32,
+    max_y: i32,
+    empty_space: Point2D,
+    start: Point2D, // 'A' position
+    layout: HashMap<T, Point2D>,
+}
+
+/**
+ * +---+---+---+
+ * | 7 | 8 | 9 |
+ * +---+---+---+
+ * | 4 | 5 | 6 |
+ * +---+---+---+
+ * | 1 | 2 | 3 |
+ * +---+---+---+
+ *     | 0 | A |
+ *     +---+---+
+ */
+fn get_numeric_keypad() -> Keypad<char> {
+    Keypad {
+        empty_space: Point2D::new(0, 3),
+        layout: HashMap::from([
+            ('7', Point2D::new(0, 0)),
+            ('8', Point2D::new(1, 0)),
+            ('9', Point2D::new(2, 0)),
+            ('4', Point2D::new(0, 1)),
+            ('5', Point2D::new(1, 1)),
+            ('6', Point2D::new(2, 1)),
+            ('1', Point2D::new(0, 2)),
+            ('2', Point2D::new(1, 2)),
+            ('3', Point2D::new(2, 2)),
+            ('0', Point2D::new(1, 3)),
+            ('A', Point2D::new(2, 3)),
+        ]),
+        max_x: 2,
+        max_y: 3,
+        start: Point2D::new(2, 3),
+    }
+}
+
+/**
+ *     +---+---+
+ *     | ^ | A |
+ * +---+---+---+
+ * | < | v | > |
+ * +---+---+---+
+ */
+fn get_directional_keypad() -> Keypad<Point2D> {
+    Keypad {
+        empty_space: Point2D::new(0, 0),
+        layout: HashMap::from([
+            (Point2D { x: 0, y: -1 }, Point2D::new(1, 0)),
+            (Point2D { x: 0, y: 0 }, Point2D::new(2, 0)),
+            (Point2D { x: -1, y: 0 }, Point2D::new(0, 1)),
+            (Point2D { x: 0, y: 1 }, Point2D::new(1, 1)),
+            (Point2D { x: 1, y: 0 }, Point2D::new(2, 1)),
+        ]),
+        max_x: 2,
+        max_y: 1,
+        start: Point2D::new(2, 0),
+    }
+}
+
+fn find_fewest_button_presses_count<T>(
     robot_count: usize,
-    path: &Vec<Point2D>,
+    path: &Vec<T>,
     cache: &mut HashMap<(Point2D, Point2D, usize), usize>,
-) -> usize {
+    keypad: &Keypad<T>,
+) -> usize
+where
+    T: Eq,
+    T: Hash,
+{
     if robot_count == 0 {
         return path.len();
     }
 
-    let empty_space = Point2D::new(0, 0);
-    let mut curr = Point2D::new(2, 0); // Always start at 'A'
+    let mut curr = keypad.start; // Always start at 'A'
     let mut count = 0;
 
     for dir in path {
-        let dest = match dir {
-            Point2D { x: 0, y: -1 } => Point2D::new(1, 0),
-            Point2D { x: 0, y: 0 } => Point2D::new(2, 0),
-            Point2D { x: -1, y: 0 } => Point2D::new(0, 1),
-            Point2D { x: 0, y: 1 } => Point2D::new(1, 1),
-            Point2D { x: 1, y: 0 } => Point2D::new(2, 1),
-            _ => panic!("Unknown button press"),
-        };
+        let dest = *keypad.layout.get(dir).unwrap();
 
         let key = (curr, dest, robot_count);
 
         count += cache.get(&key).cloned().unwrap_or_else(|| {
-            let moves = get_unitary_moves(curr, dest, empty_space, 2, 1);
+            let moves = get_unitary_moves(curr, dest, keypad);
 
             let val = moves
                 .iter()
                 .map(|next_path| {
-                    find_fewest_button_presses_count(robot_count - 1, next_path, cache)
+                    find_fewest_button_presses_count(
+                        robot_count - 1,
+                        next_path,
+                        cache,
+                        &get_directional_keypad(),
+                    )
                 })
                 .min()
                 .unwrap();
@@ -100,13 +170,7 @@ fn find_fewest_button_presses_count(
     count
 }
 
-fn get_unitary_moves(
-    from: Point2D,
-    to: Point2D,
-    skip: Point2D,
-    max_x: i32,
-    max_y: i32,
-) -> Vec<Vec<Point2D>> {
+fn get_unitary_moves<T: Eq>(from: Point2D, to: Point2D, keypad: &Keypad<T>) -> Vec<Vec<Point2D>> {
     let mut all_moves = vec![];
 
     let dist = to - from;
@@ -130,7 +194,7 @@ fn get_unitary_moves(
         y_moves.push(Point2D::new(0, 0)); // (0,0) Means 'A' press
         all_moves.push(y_moves);
     } else {
-        let paths = get_possible_paths(from, to, skip, max_x, max_y);
+        let paths = get_possible_paths(from, to, keypad);
 
         let mut min_paths: Vec<Vec<Point2D>> = vec![];
 
@@ -157,13 +221,7 @@ fn get_unitary_moves(
     all_moves
 }
 
-fn get_possible_paths(
-    from: Point2D,
-    to: Point2D,
-    skip: Point2D,
-    max_x: i32,
-    max_y: i32,
-) -> Vec<Vec<Point2D>> {
+fn get_possible_paths<T>(from: Point2D, to: Point2D, keypad: &Keypad<T>) -> Vec<Vec<Point2D>> {
     let mut paths = vec![];
 
     let dirs = get_orthogonal_directions();
@@ -183,11 +241,11 @@ fn get_possible_paths(
 
         let curr_cost = *costs.get(&curr).unwrap();
 
-        for next in dirs
-            .iter()
-            .map(|d| *d + curr)
-            .filter(|&n| n != skip && (0..=max_x).contains(&n.x) && (0..=max_y).contains(&n.y))
-        {
+        for next in dirs.iter().map(|d| *d + curr).filter(|&n| {
+            n != keypad.empty_space
+                && (0..=keypad.max_x).contains(&n.x)
+                && (0..=keypad.max_y).contains(&n.y)
+        }) {
             if costs.get(&next).is_none_or(|c| curr_cost + 1 <= *c) {
                 costs.insert(next, curr_cost + 1);
                 q.push_back((next, path.clone()));
@@ -196,117 +254,6 @@ fn get_possible_paths(
     }
 
     paths
-}
-
-/**
- *     +---+---+
- *     | ^ | A |
- * +---+---+---+
- * | < | v | > |
- * +---+---+---+
- */
-fn _get_directional_keypad_moves(start_pos: Point2D, presses: Vec<Point2D>) -> Vec<Vec<Point2D>> {
-    let empty_space = Point2D::new(0, 0);
-
-    let mut curr = start_pos;
-
-    let mut moves = vec![];
-
-    for press in presses {
-        let dest = match press {
-            Point2D { x: 0, y: -1 } => Point2D::new(1, 0),
-            Point2D { x: 0, y: 0 } => Point2D::new(2, 0),
-            Point2D { x: -1, y: 0 } => Point2D::new(0, 1),
-            Point2D { x: 0, y: 1 } => Point2D::new(1, 1),
-            Point2D { x: 1, y: 0 } => Point2D::new(2, 1),
-            _ => panic!("Unknown button press"),
-        };
-
-        let u_moves = get_unitary_moves(curr, dest, empty_space, 2, 1);
-
-        moves = merge_moves(moves, u_moves);
-
-        curr = dest;
-    }
-
-    moves
-}
-
-fn _print_moves(dirs: &Vec<Point2D>) {
-    let str: String = dirs
-        .iter()
-        .map(|d| match d {
-            Point2D { x: 0, y: 0 } => 'A',
-            Point2D { x: 1, y: 0 } => '>',
-            Point2D { x: -1, y: 0 } => '<',
-            Point2D { x: 0, y: 1 } => 'v',
-            Point2D { x: 0, y: -1 } => '^',
-            _ => panic!("unknown dir"),
-        })
-        .collect();
-
-    println!("{str}");
-}
-
-/**
- * +---+---+---+
- * | 7 | 8 | 9 |
- * +---+---+---+
- * | 4 | 5 | 6 |
- * +---+---+---+
- * | 1 | 2 | 3 |
- * +---+---+---+
- *     | 0 | A |
- *     +---+---+
- */
-fn get_numeric_keypad_moves(start_pos: Point2D, code: &String) -> Vec<Vec<Point2D>> {
-    let empty_space = Point2D::new(0, 3);
-
-    let mut curr = start_pos;
-
-    let mut moves = vec![];
-
-    for c in code.chars() {
-        let dest = match c {
-            '7' => Point2D::new(0, 0),
-            '8' => Point2D::new(1, 0),
-            '9' => Point2D::new(2, 0),
-            '4' => Point2D::new(0, 1),
-            '5' => Point2D::new(1, 1),
-            '6' => Point2D::new(2, 1),
-            '1' => Point2D::new(0, 2),
-            '2' => Point2D::new(1, 2),
-            '3' => Point2D::new(2, 2),
-            '0' => Point2D::new(1, 3),
-            'A' => Point2D::new(2, 3),
-            _ => panic!("Unknown keypad button"),
-        };
-
-        let u_moves = get_unitary_moves(curr, dest, empty_space, 2, 3);
-
-        moves = merge_moves(moves, u_moves);
-
-        curr = dest;
-    }
-
-    moves
-}
-
-fn merge_moves(moves: Vec<Vec<Point2D>>, u_moves: Vec<Vec<Point2D>>) -> Vec<Vec<Point2D>> {
-    if moves.is_empty() {
-        return u_moves;
-    } else {
-        let mut new_moves = Vec::with_capacity(u_moves.len() * moves.len());
-
-        for um in u_moves {
-            for m in &moves {
-                new_moves.push([m.clone(), um.clone()].concat());
-                // m.extend(um.clone());
-            }
-        }
-
-        return new_moves;
-    }
 }
 
 impl Day for Day21 {
@@ -341,9 +288,13 @@ fn test_day21_p1() {
     let paths = get_possible_paths(
         Point2D::new(0, 1),
         Point2D::new(2, 0),
-        Point2D::new(0, 0),
-        2,
-        1,
+        &Keypad {
+            max_x: 2,
+            max_y: 1,
+            empty_space: Point2D::new(0, 0),
+            start: Point2D::new(2, 2),
+            layout: HashMap::from([(1, Point2D::new(2, 2))]),
+        },
     );
 
     assert!(paths.contains(&vec![
@@ -359,30 +310,23 @@ fn test_day21_p1() {
         Point2D::new(2, 0)
     ]));
 
-    let _paths = get_possible_paths(
-        Point2D::new(1, 3),
-        Point2D::new(2, 0),
-        Point2D::new(0, 3),
-        2,
-        3,
-    );
-    // assert!(paths.contains(&vec![
-    //     Point2D::new(1, 3),
-    //     Point2D::new(1, 1),
-    //     Point2D::new(2, 1),
-    //     Point2D::new(0, 3)
-    // ]));
-
     assert_eq!(res, 126384)
 }
 
 #[test]
 fn test_day21_p2() {
-    let input = String::from("");
+    let input = String::from(
+        "029A
+980A
+179A
+456A
+379A
+",
+    );
 
     let day = Day21::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, 154115708116294)
 }
