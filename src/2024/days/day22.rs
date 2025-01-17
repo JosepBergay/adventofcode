@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    error::Error,
-};
+use std::error::Error;
 
 use super::{baseday::DayResult, Day};
 
@@ -31,31 +28,32 @@ impl Day22 {
     }
 
     fn part2(&self, monkeys: Vec<Vec<usize>>) -> usize {
+        let max_diff_sequences = 19_usize.pow(4);
         // Create global map of sequences to bananas
-        let mut map = HashMap::with_capacity(19_usize.pow(4));
+        // (when using Vec instead of HashMap/HashSet run time went down from ~500ms to ~70ms)
+        let mut map = vec![0; max_diff_sequences];
 
         // Scan each monkey for unique sequences
         for secrets in monkeys {
-            let mut seen = HashSet::new();
+            let mut seen = vec![false; max_diff_sequences];
 
             for win in secrets.windows(5) {
                 let hash = get_hash(win);
 
                 // When a unique sequence is found update global map with price
-                if !seen.contains(&hash) {
-                    seen.insert(hash);
-                    let entry = map.entry(hash).or_insert(0);
-                    *entry += win.last().unwrap() % 10;
+                if seen[hash] == false {
+                    seen[hash] = true;
+                    map[hash] += win.last().unwrap() % 10;
                 }
             }
         }
 
         // Return global map max value
-        *map.values().max().unwrap()
+        *map.iter().max().unwrap()
     }
 }
 
-fn get_diff(prev: usize, curr: usize) -> usize {
+fn get_diff(curr: usize, prev: usize) -> usize {
     let diff = (curr % 10) as isize - (prev % 10) as isize + 9;
     diff as usize
 }
