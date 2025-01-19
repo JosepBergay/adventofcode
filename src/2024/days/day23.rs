@@ -9,27 +9,29 @@ use super::{baseday::DayResult, Day};
 pub struct Day23 {}
 
 impl Day23 {
-    fn parse_input(&self, input: String) -> Vec<Vec<String>> {
-        input
+    fn parse_input(&self, input: String) -> HashMap<String, Vec<String>> {
+        let connections = input
             .lines()
             .filter(|l| !l.is_empty())
             .map(|l| l.split("-").map(|s| s.to_string()).collect())
-            .collect()
-    }
+            .collect::<Vec<Vec<_>>>();
 
-    fn part1(&self, parsed: &Vec<Vec<String>>) -> usize {
         let mut map = HashMap::new();
 
-        for connection in parsed {
+        for connection in connections {
             let v = map.entry(connection[0].clone()).or_insert(vec![]);
             v.push(connection[1].clone());
             let v = map.entry(connection[1].clone()).or_insert(vec![]);
             v.push(connection[0].clone());
         }
 
+        map
+    }
+
+    fn part1(&self, parsed: &HashMap<String, Vec<String>>) -> usize {
         let mut sets = HashSet::new();
 
-        for (key, value) in &map {
+        for (key, value) in parsed {
             for i in 0..value.len() {
                 for j in i + 1..value.len() {
                     if sets.contains(&(value[i].clone(), key.clone(), value[j].clone()))
@@ -40,7 +42,7 @@ impl Day23 {
                         continue;
                     }
 
-                    if map
+                    if parsed
                         .get(&value[i])
                         .is_some_and(|v| v.iter().any(|v| *v == value[j]))
                     {
@@ -55,9 +57,64 @@ impl Day23 {
             .count()
     }
 
-    fn part2(&self, _parsed: Vec<Vec<String>>) -> &str {
-        "TODO"
+    fn part2(&self, parsed: HashMap<String, Vec<String>>) -> String {
+        let all_cliques = bron_kerbosch(
+            HashSet::new(),
+            parsed.keys().collect(),
+            HashSet::new(),
+            &parsed,
+        );
+
+        let mut largest = all_cliques
+            .iter()
+            .max_by_key(|v| v.len())
+            .unwrap()
+            .iter()
+            .map(|s| (*s).clone())
+            .collect::<Vec<String>>();
+
+        largest.sort();
+
+        largest.join(",")
     }
+}
+
+fn bron_kerbosch<'a>(
+    r: HashSet<&'a String>,
+    mut p: HashSet<&'a String>,
+    mut x: HashSet<&'a String>,
+    graph: &'a HashMap<String, Vec<String>>,
+) -> Vec<HashSet<&'a String>> {
+    if p.is_empty() && x.is_empty() {
+        return vec![r];
+    }
+
+    let mut out = vec![];
+    for &v in &p.clone() {
+        let mut new_r = r.clone();
+        new_r.insert(v);
+
+        let v_neighbours = graph.get(v).unwrap().iter().collect::<HashSet<_>>();
+
+        let new_p = p
+            .intersection(&v_neighbours)
+            .map(|s| *s)
+            .collect::<HashSet<_>>();
+
+        let new_x = x
+            .intersection(&v_neighbours)
+            .map(|s| *s)
+            .collect::<HashSet<_>>();
+
+        let vec = bron_kerbosch(new_r, new_p, new_x, graph);
+        out.extend(vec);
+
+        // Move v from p to x
+        p.remove(v);
+        x.insert(v);
+    }
+
+    out
 }
 
 impl Day for Day23 {
@@ -74,9 +131,9 @@ impl Day for Day23 {
     }
 }
 
-#[test]
-fn test_day23_p1() {
-    let input = String::from(
+#[cfg(test)]
+fn get_test_input() -> String {
+    String::from(
         "kh-tc
 qp-kh
 de-cg
@@ -110,7 +167,12 @@ wh-qp
 tb-vc
 td-yn
 ",
-    );
+    )
+}
+
+#[test]
+fn test_day23_p1() {
+    let input = get_test_input();
 
     let day = Day23::default();
     let parsed = day.parse_input(input);
@@ -121,11 +183,11 @@ td-yn
 
 #[test]
 fn test_day23_p2() {
-    let input = String::from("");
+    let input = get_test_input();
 
     let day = Day23::default();
     let parsed = day.parse_input(input);
     let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    assert_eq!(res, "co,de,ka,ta")
 }
