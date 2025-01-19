@@ -58,17 +58,22 @@ impl Day23 {
     }
 
     fn part2(&self, parsed: HashMap<String, Vec<String>>) -> String {
-        let all_cliques = bron_kerbosch(
-            HashSet::new(),
-            parsed.keys().collect(),
-            HashSet::new(),
-            &parsed,
-        );
+        // let all_cliques = bron_kerbosch(
+        //     HashSet::new(),
+        //     parsed.keys().collect(),
+        //     HashSet::new(),
+        //     &parsed,
+        // );
 
-        let mut largest = all_cliques
-            .iter()
-            .max_by_key(|v| v.len())
-            .unwrap()
+        // let mut largest = all_cliques
+        //     .iter()
+        //     .max_by_key(|v| v.len())
+        //     .unwrap()
+        //     .iter()
+        //     .map(|s| (*s).clone())
+        //     .collect::<Vec<String>>();
+
+        let mut largest = greedy(&parsed)
             .iter()
             .map(|s| (*s).clone())
             .collect::<Vec<String>>();
@@ -79,7 +84,37 @@ impl Day23 {
     }
 }
 
-fn bron_kerbosch<'a>(
+/**
+ * This Greedy algorithm is much faster (x10) than Bron-Kerbosch (at least for this particular
+ * input). Also, the implementation for Bron-Kerbosch (below) could be way better as it involes a
+ * bunch of clonning. This Greedy implementation could also be better if it skipped already visited
+ * cliques. Tried to add a seen set but it didn't seem to make a difference again for this input and
+ * my computer.
+ */
+fn greedy(graph: &HashMap<String, Vec<String>>) -> Vec<&String> {
+    let mut largest = vec![];
+
+    for (k, neighbours) in graph {
+        let mut clique = vec![k];
+
+        for n in neighbours {
+            if clique
+                .iter()
+                .all(|c| graph.get(n).is_some_and(|v| v.contains(c)))
+            {
+                clique.push(n);
+            }
+        }
+
+        if clique.len() > largest.len() {
+            largest = clique;
+        }
+    }
+
+    largest
+}
+
+fn _bron_kerbosch<'a>(
     r: HashSet<&'a String>,
     mut p: HashSet<&'a String>,
     mut x: HashSet<&'a String>,
@@ -106,7 +141,7 @@ fn bron_kerbosch<'a>(
             .map(|s| *s)
             .collect::<HashSet<_>>();
 
-        let vec = bron_kerbosch(new_r, new_p, new_x, graph);
+        let vec = _bron_kerbosch(new_r, new_p, new_x, graph);
         out.extend(vec);
 
         // Move v from p to x
