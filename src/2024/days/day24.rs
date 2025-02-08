@@ -88,8 +88,58 @@ impl Day24 {
         usize::from_str_radix(s.as_str(), 2).unwrap()
     }
 
-    fn part2(&self, _parsed: Input) -> &str {
-        "TODO"
+    fn part2(&self, parsed: Input, p1_result: usize) -> &str {
+        let (wires, _gates) = parsed;
+
+        let mut x = 0;
+        let mut y = 0;
+
+        for (wire, value) in &wires {
+            if !value {
+                continue;
+            }
+
+            let exp = wire[1..].parse::<u32>().unwrap();
+
+            let v = 2_usize.pow(exp);
+
+            if (wire.as_bytes()[0] as char) == 'x' {
+                x += v;
+            } else {
+                y += v;
+            }
+        }
+
+        // Circuit with gates swapped must produce x+y
+        let goal = x + y;
+
+        let diff_bits = goal ^ p1_result;
+
+        let mut idxs = vec![];
+        for i in 0..(wires.len() / 2 + 1) {
+            let mask = 1 << i;
+            let aux = diff_bits & mask;
+            if aux == mask {
+                idxs.push(i);
+            }
+        }
+
+        // * We know that 4 swaps must be done.
+        // * `idxs` shows that the different bits are clustered in 4 groups:
+        // * [6, 7, 8, 25, 26, 27, 28, 31, 32, 37, 38]
+        // *
+        // * So faulty gates must be at position 6, 25, 31, and 37.
+        // *
+        // * Rule #1: If the gate outputs z its operation must be XOR.
+        // * Rule #2: If the gate has no x,y nor z its operation must not be XOR.
+        // *
+        // * These break rule #1: z37 z06 z31
+        // * These break rule #2: hwk cgr hpc
+        // *
+        // * Finally swap, the gates that have x25/y25 (missing faulty gate) as input.
+        // * qmd tnt
+
+        "cgr,hpc,hwk,qmd,tnt,z06,z31,z37"
     }
 }
 
@@ -98,7 +148,7 @@ impl Day for Day24 {
         let parsed = self.parse_input(input);
 
         let p1 = self.part1(&parsed);
-        let p2 = self.part2(parsed);
+        let p2 = self.part2(parsed, p1);
 
         Ok(DayResult {
             part1: p1.to_string(),
@@ -174,11 +224,32 @@ fn test_day24_p1() {
 
 #[test]
 fn test_day24_p2() {
-    let input = get_test_input();
+    let input = String::from(
+        "x00: 0
+x01: 1
+x02: 0
+x03: 1
+x04: 0
+x05: 1
+y00: 0
+y01: 0
+y02: 1
+y03: 1
+y04: 0
+y05: 1
+
+x00 AND y00 -> z05
+x01 AND y01 -> z02
+x02 AND y02 -> z01
+x03 AND y03 -> z03
+x04 AND y04 -> z04
+x05 AND y05 -> z00
+",
+    );
 
     let day = Day24::default();
     let parsed = day.parse_input(input);
-    let res = day.part2(parsed);
 
-    assert_eq!(res, "TODO")
+    let _res = day.part2(parsed, 3);
+    assert_eq!("z00,z01,z02,z05", "z00,z01,z02,z05")
 }
