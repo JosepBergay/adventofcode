@@ -48,18 +48,18 @@ impl Day6 {
 
         let mut count = 0;
 
-        let mut obstacles_set = HashSet::new();
+        let mut obstacles_set = Map2D::new(vec![vec![false; map.map[0].len()]; map.map.len()]);
         let mut start = start;
         let mut start_dir = 0;
 
         loop {
             let mut curr_pos = start;
             let mut curr_dir = start_dir; // We start going up
-            let mut seen = HashSet::new();
+            let mut seen = Map2D::new(vec![vec![4; map.map[0].len()]; map.map.len()]);
             let mut obstacle_pos: Option<Point2D> = None;
 
             while !map.is_out_of_bounds(curr_pos) {
-                if seen.contains(&(curr_pos, dirs[curr_dir])) {
+                if seen.get(curr_pos).is_some_and(|v| *v != 4) {
                     // Found loop!
                     count += 1;
                     break;
@@ -67,12 +67,12 @@ impl Day6 {
 
                 let c = map.get(curr_pos).unwrap();
 
-                if obstacle_pos.is_none() && !obstacles_set.contains(&curr_pos) && c != &'#' {
-                    // Optimization: save pos+dir so next loop we start from here (~10s -> ~2.7s).
+                if obstacle_pos.is_none() && !obstacles_set.get(curr_pos).unwrap() && c != &'#' {
+                    // Optimization: save pos+dir so next loop we start from here (4x faster).
                     start = curr_pos;
                     start_dir = curr_dir;
                     obstacle_pos = Some(curr_pos);
-                    obstacles_set.insert(curr_pos);
+                    obstacles_set.map[curr_pos.y as usize][curr_pos.x as usize] = true;
                 }
 
                 if obstacle_pos.is_some_and(|p| p == curr_pos) || c == &'#' {
@@ -80,7 +80,7 @@ impl Day6 {
                     curr_pos -= dirs[curr_dir];
                     curr_dir = (curr_dir + 1) % 4;
                 } else {
-                    seen.insert((curr_pos, dirs[curr_dir]));
+                    seen.map[curr_pos.y as usize][curr_pos.x as usize] = curr_dir;
                 }
 
                 curr_pos += dirs[curr_dir];

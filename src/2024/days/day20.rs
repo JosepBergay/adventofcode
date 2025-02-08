@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    error::Error,
-};
+use std::{collections::VecDeque, error::Error};
 
 use crate::days::map2d::Map2D;
 
@@ -10,7 +7,7 @@ use super::{baseday::DayResult, point2d::Point2D, Day};
 #[derive(Default)]
 pub struct Day20 {}
 
-type Input = (Vec<Point2D>, HashMap<Point2D, usize>);
+type Input = (Vec<Point2D>, Map2D<isize>);
 
 impl Day20 {
     fn parse_input(&self, input: String) -> Input {
@@ -28,7 +25,7 @@ impl Day20 {
         }
 
         let mut path = vec![];
-        let mut seen = HashMap::new();
+        let mut seen: Map2D<isize> = Map2D::new(vec![vec![-1; map.map[0].len()]; map.map.len()]);
 
         let mut q = VecDeque::new();
 
@@ -36,14 +33,14 @@ impl Day20 {
 
         while let Some(curr) = q.pop_front() {
             path.push(curr);
-            seen.insert(curr, path.len() - 1);
+            seen.map[curr.y as usize][curr.x as usize] = (path.len() - 1) as isize;
 
             if curr == end {
                 break;
             }
 
             for neigh in map.get_adjacent(curr) {
-                if *map.get(neigh).unwrap() != '#' && !seen.contains_key(&neigh) {
+                if *map.get(neigh).unwrap() != '#' && !seen.get(neigh).is_some_and(|v| *v != -1) {
                     q.push_back(neigh);
                 }
             }
@@ -67,7 +64,7 @@ impl Day20 {
 
 fn count_cheats(
     path: &Vec<Point2D>,
-    point_to_idx_map: &HashMap<Point2D, usize>,
+    point_to_idx_map: &Map2D<isize>,
     cheat_max_distance: usize,
     savings: usize,
 ) -> usize {
@@ -90,8 +87,9 @@ fn count_cheats(
                 let next = *p + *d;
 
                 point_to_idx_map
-                    .get(&next)
-                    .is_some_and(|&end_idx| end_idx > i && (end_idx - i - dist) >= savings)
+                    .get(next)
+                    .and_then(|v| if *v == -1 { None } else { Some(*v as usize) })
+                    .is_some_and(|end_idx| end_idx > i && (end_idx - i - dist) >= savings)
             })
             .count();
     }
