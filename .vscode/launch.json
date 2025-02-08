@@ -1,0 +1,49 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'adventofcode'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=adventofcode",
+                    "--package=adventofcode"
+                ],
+                "filter": {
+                    "name": "adventofcode",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "22"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'adventofcode'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=adventofcode",
+                    "--package=adventofcode"
+                ],
+                "filter": {
+                    "name": "adventofcode",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "24_p2"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
