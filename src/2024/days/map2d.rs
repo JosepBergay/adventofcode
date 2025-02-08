@@ -31,8 +31,7 @@ impl<T> Map2D<T> {
         if self.is_out_of_bounds(p) {
             None
         } else {
-            let v = &self.map[usize::try_from(p.y).expect(format!("y {p:?}").as_str())]
-                [usize::try_from(p.x).expect(format!("x {p:?}").as_str())];
+            let v = &self.map[usize::try_from(p.y).unwrap()][usize::try_from(p.x).unwrap()];
             Some(v)
         }
     }
