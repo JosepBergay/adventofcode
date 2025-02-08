@@ -11,6 +11,28 @@ The aim of this repo is to share my aoc exercises, maybe we can comment them up,
 
 If you intend to use it you should set an env var in the shape of `SESSION_COOKIE=123-replace-with-yours` containing the session id so it can properly fetch all inputs. You can grab yours from https://adventofcode.com/ once logged in (devtools ftw!).
 
+## 2024
+
+Rust
+
+### Build
+
+```bash
+cargo build -r # -r for release mode
+```
+
+### Run
+
+```bash
+cargo run -r
+```
+
+### Development
+
+```bash
+cargo run
+```
+
 ## 2023
 
 Kotlin
@@ -87,4 +109,4 @@ start Running Day 2
 ```
 
 </br>
-Made with ♥, NodeJS and Golang
+Made with ♥, NodeJS, Golang, Kotlin, and Rust
