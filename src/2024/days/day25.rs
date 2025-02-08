@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error};
+use std::error::Error;
 
 use super::{baseday::DayResult, Day};
 
@@ -55,8 +55,8 @@ impl Day25 {
         count
     }
 
-    fn part2(&self, parsed: Input) -> &str {
-        "TODO"
+    fn part2(&self, _parsed: Input) -> &str {
+        "🎉"
     }
 }
 
