@@ -55,6 +55,6 @@ public class DayRunner()
 
         var elapsed = stopWatch.Elapsed;
 
-        Console.WriteLine($"Day {num}: [Part1]: {result.part1} [Part2]: {result.part2} - Elapsed: {elapsed}");
+        Console.WriteLine($"Day {num}: [Part1]: {result.part1} [Part2]: {result.part2} ({elapsed})");
     }
 }
