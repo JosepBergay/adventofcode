@@ -11,6 +11,28 @@ The aim of this repo is to share my aoc exercises, maybe we can comment them up,
 
 If you intend to use it you should set an env var in the shape of `SESSION_COOKIE=123-replace-with-yours` containing the session id so it can properly fetch all inputs. You can grab yours from https://adventofcode.com/ once logged in (devtools ftw!).
 
+## 2025
+
+.NET
+
+### Build
+
+```bash
+dotnet build -c Release # for release mode
+```
+
+### Run
+
+```bash
+dotnet run -c Release # for release mode
+```
+
+### Development
+
+```bash
+dotnet run 1 2 # Will run day 1 and 2
+```
+
 ## 2024
 
 Rust
