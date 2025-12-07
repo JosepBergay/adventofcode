@@ -48,7 +48,39 @@ class Day1() : BaseDay<List<(char, int)>>
 
     public override string Part2(List<(char, int)> parsed)
     {
-        return "";
+        var count = 0;
+        var max = 100;
+
+        var curr = 50;
+        foreach (var (c, i) in parsed)
+        {
+            count += i / max; // Full rotations
+            var remainder = i % max;
+
+            if (c == 'R')
+            {
+                var added = curr + remainder;
+                if (added >= max)
+                {
+                    count++;
+                }
+                curr = added % max;
+            }
+            else
+            {
+                var sub = curr - remainder;
+                if (curr != 0 && sub <= 0)
+                {
+                    count++;
+                }
+                curr = sub % max;
+                if (curr < 0)
+                {
+                    curr += max;
+                }
+            }
+        }
+
+        return count.ToString();
     }
 }
-
