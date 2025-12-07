@@ -25,10 +25,9 @@ public class DayRunner()
         return await res.Content.ReadAsStringAsync();
     }
 
-
     private async Task<string> GetInputAsync(int dayNum)
     {
-        var path = $"src/2025/days/day{dayNum}.txt";
+        var path = $"src/2025/Days/day{dayNum}.txt";
         string input;
 
         if (!File.Exists(path))
@@ -55,6 +54,6 @@ public class DayRunner()
 
         var elapsed = stopWatch.Elapsed;
 
-        Console.WriteLine($"Day {num}: [Part1]: {result.part1} [Part2]: {result.part2} ({elapsed})");
+        Console.WriteLine($"Day {num}: [Part1]: {result.Part1} [Part2]: {result.Part2} ({elapsed})");
     }
 }

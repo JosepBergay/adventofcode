@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/2025/">
+    <Project DefaultStartup="true" Path="src/2025/Days/Days.csproj" />
+    <Project Path="src/2025/Days.Tests/Days.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,4 +1,4 @@
-class Day1() : BaseDay<List<(char, int)>>
+public class Day1() : BaseDay<List<(char, int)>>
 {
     public override List<(char, int)> Parse(string input)
     {
