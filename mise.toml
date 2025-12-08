@@ -1,3 +1,6 @@
 [tools]
 dotnet = "10"
 go="1.19"
+
+[tasks]
+2025 = "dotnet run --project src/2025/Days/Days.csproj"
