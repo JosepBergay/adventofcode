@@ -31,4 +31,27 @@ public static class Extensions
             }
         }
     }
+
+    extension(int i)
+    {
+        public IEnumerable<int> Factors()
+        {
+            var curr = 1;
+            var sqrt = Math.Sqrt(i);
+            while (curr <= sqrt)
+            {
+                if (i % curr == 0)
+                {
+                    yield return curr;
+
+                    var div = i / curr;
+                    if (div != curr)
+                    {
+                        yield return div;
+                    }
+                }
+                curr++;
+            }
+        }
+    }
 }
