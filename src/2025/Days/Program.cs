@@ -23,9 +23,10 @@ if (!days.Any())
     days.AddRange(allDays.Select((k, v) => (k.Key, k.Value)));
 }
 
-Console.WriteLine($"Running days {String.Join(", ", days.Select(d => d.Item1))}");
+Console.WriteLine($"Running days {string.Join(", ", days.Select(d => d.Item1))}");
 
 var tasks = days
     .Select(d => runner.RunDayAsync(d.Item1, d.Item2));
+// .Select(d => runner.RunDayWithDiagnosticsAsync(d.Item1, d.Item2));
 
 await Task.WhenAll(tasks);

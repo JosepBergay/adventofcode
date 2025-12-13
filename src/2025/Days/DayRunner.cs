@@ -44,16 +44,49 @@ public class DayRunner()
         return input;
     }
 
-    public async Task RunDayAsync(int num, IDay day)
+    private async Task<(DayResult, TimeSpan)> RunDayAsync(string input, IDay day)
     {
-        var input = await GetInputAsync(num);
-
         var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
         var result = day.Exec(input);
 
         var elapsed = stopWatch.Elapsed;
 
+        return (result, elapsed);
+    }
+
+    public async Task RunDayAsync(int num, IDay day)
+    {
+        var input = await GetInputAsync(num);
+
+        var (result, elapsed) = await RunDayAsync(input, day);
+
         Console.WriteLine($"Day {num}: [Part1]: {result.Part1} [Part2]: {result.Part2} ({elapsed})");
+    }
+
+    public async Task RunDayWithDiagnosticsAsync(int num, IDay day)
+    {
+        var input = await GetInputAsync(num);
+
+        var tasks = Enumerable.Range(0, 100)
+            .Select(_ => RunDayAsync(input, day));
+
+        var results = await Task.WhenAll(tasks);
+
+        var (result, _) = results.First();
+
+        Console.WriteLine($"Day {num}: [Part1]: {result.Part1} [Part2]: {result.Part2}");
+
+        var sorted = results.Select(it => it.Item2).ToList();
+        sorted.Sort();
+
+        var mean = sorted.Aggregate((a, b) => a.Add(b)) / sorted.Count;
+
+        Console.WriteLine($"#1   -> {sorted.First()}");
+        Console.WriteLine($"25%  -> {sorted[sorted.Count / 4]}");
+        Console.WriteLine($"50%  -> {sorted[sorted.Count / 2]}");
+        Console.WriteLine($"75%  -> {sorted[sorted.Count * 3 / 4]}");
+        Console.WriteLine($"last -> {sorted.Last()}");
+        Console.WriteLine($"~avg -> {mean}");
     }
 }
