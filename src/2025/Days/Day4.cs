@@ -22,9 +22,28 @@ public class Day4 : BaseDay<Map2D<char>>
             .ToString();
     }
 
-    public override string Part2(Map2D<char> parsed)
+    public override string Part2(Map2D<char> map)
     {
-        return "";
+        var total = 0;
+        while (true)
+        {
+            var removed = 0;
+            foreach (var (it, p) in map.Iter())
+            {
+                if (it != '@') continue;
+
+                if (map.GetAdjacents(p, true).Count(adj => map.Get(adj) == '@') < 4)
+                {
+                    map.Set(p, '.'); // Remove paper roll
+                    removed++;
+                    total++;
+                }
+            }
+
+            if (removed == 0) break;
+        }
+
+        return total.ToString();
     }
 }
 
@@ -57,6 +76,14 @@ public class Map2D<T>
     public T? Get(int x, int y)
     {
         return map[y][x];
+    }
+
+    /**
+     * Ensure map has enough size or bad things will happen.
+     */
+    public void Set(Point2D p, T item)
+    {
+        map[p.y][p.x] = item;
     }
 
     public IEnumerable<Point2D> GetAdjacents(Point2D p, bool diagonals = false)
