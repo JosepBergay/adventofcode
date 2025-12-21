@@ -18,7 +18,7 @@ public class Day5Tests
 11
 17
 32
-", "3", ""},
+", "3", "14"},
     };
 
     [Theory]

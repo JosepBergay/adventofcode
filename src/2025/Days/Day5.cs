@@ -49,6 +49,56 @@ public class Day5 : BaseDay<(List<(long, long)>, List<long>)>
 
     public override string Part2((List<(long, long)>, List<long>) parsed)
     {
-        return "";
+        var (ranges, _) = parsed;
+
+        var curr = new List<(long, long)>();
+
+        for (int i = 0; i < ranges.Count; i++)
+        {
+            var newRange = ranges[i];
+
+            var newRanges = new List<(long, long)>(curr.Count);
+            (long, long)? lowerRange = null;
+            (long, long)? upperRange = null;
+            var skipAdd = false;
+            foreach (var oldRange in curr)
+            {
+                if (oldRange.Item1 <= newRange.Item1 && newRange.Item2 <= oldRange.Item2)
+                {
+                    // newRange is completely included in oldRange, so items are already included
+                    skipAdd = true;
+                    break;
+                }
+                else if (oldRange.Item1 <= newRange.Item1 && newRange.Item1 <= oldRange.Item2)
+                {
+                    // newRange starts inside oldRange
+                    lowerRange = oldRange;
+                }
+                else if (oldRange.Item1 <= newRange.Item2 && newRange.Item2 <= oldRange.Item2)
+                {
+                    // newRange ends inside oldRange
+                    upperRange = oldRange;
+                }
+                else if (newRange.Item2 < oldRange.Item1 || oldRange.Item2 < newRange.Item1)
+                {
+                    // No overlap
+                    newRanges.Add(oldRange);
+                }
+            }
+
+            if (skipAdd)
+            {
+                continue;
+            }
+
+            var lowerN = lowerRange.HasValue ? lowerRange.Value.Item1 : newRange.Item1;
+            var upperN = upperRange.HasValue ? upperRange.Value.Item2 : newRange.Item2;
+
+            newRanges.Add((lowerN, upperN));
+
+            curr = newRanges;
+        }
+
+        return curr.Sum((r) => r.Item2 - r.Item1 + 1).ToString();
     }
 }
