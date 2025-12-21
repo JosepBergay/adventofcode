@@ -5,6 +5,7 @@ var allDays = new Dictionary<int, IDay>{
     { 3, new Day3() },
     { 4, new Day4() },
     { 5, new Day5() },
+    { 6, new Day6() },
 };
 
 DayRunner runner = new();
