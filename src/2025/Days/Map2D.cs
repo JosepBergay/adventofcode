@@ -21,7 +21,7 @@ public class Map2D<T>
 
     public T? Get(Point2D p)
     {
-        return map[p.y][p.x];
+        return map[p.Y][p.X];
 
     }
     public T? Get(int x, int y)
@@ -34,7 +34,7 @@ public class Map2D<T>
      */
     public void Set(Point2D p, T item)
     {
-        map[p.y][p.x] = item;
+        map[p.Y][p.X] = item;
     }
 
     public IEnumerable<Point2D> GetAdjacents(Point2D p, bool diagonals = false)
@@ -50,8 +50,8 @@ public class Map2D<T>
 
                 if (!diagonals && dx != 0 && dy != 0) continue;
 
-                var x = dx + p.x;
-                var y = dy + p.y;
+                var x = dx + p.X;
+                var y = dy + p.Y;
 
                 if (y > maxYIdx || x > maxXIdx || y < 0 || x < 0) continue; // Out of bounds!
 
@@ -65,7 +65,7 @@ public class Map2D<T>
         var maxYIdx = map.Count - 1;
         var maxXIdx = maxYIdx > 0 ? map[0].Count - 1 : 0;
 
-        return p.y > maxYIdx || p.x > maxXIdx || p.y < 0 || p.x < 0;
+        return p.Y > maxYIdx || p.X > maxXIdx || p.Y < 0 || p.X < 0;
     }
 
     public static Map2D<char> FromString(string str)
