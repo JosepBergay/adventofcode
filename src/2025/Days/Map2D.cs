@@ -60,6 +60,14 @@ public class Map2D<T>
         }
     }
 
+    public bool IsOutOfBounds(Point2D p)
+    {
+        var maxYIdx = map.Count - 1;
+        var maxXIdx = maxYIdx > 0 ? map[0].Count - 1 : 0;
+
+        return p.y > maxYIdx || p.x > maxXIdx || p.y < 0 || p.x < 0;
+    }
+
     public static Map2D<char> FromString(string str)
     {
         List<List<char>> list = [];
