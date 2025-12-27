@@ -1,63 +1,77 @@
-using Microsoft.VisualBasic;
-
-public class Day6 : BaseDay<List<List<int>>>
+public class Day6 : BaseDay<List<List<char>[]>>
 {
-    public override List<List<int>> Parse(string input)
+    public override List<List<char>[]> Parse(string input)
     {
-        var table = new List<List<int>>();
+        var lines = input.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var line = new List<int>();
+        var parsed = new List<List<char>[]>();
 
-        var str = "";
+        var operation = lines.Select(l => new List<char>()).ToArray();
 
-        for (int i = 0; i < input.Length; i++)
+        for (int i = 0; i < lines[0].Length; i++)
         {
-            var c = input[i];
-
-            if (c == ' ' || c == '\n' || i == input.Length - 1)
+            if (lines.All(l => l[i] == ' '))
             {
-                if (str.Length > 0)
+                parsed.Add(operation);
+                // Reset
+                operation = lines.Select(l => new List<char>()).ToArray();
+            }
+            else
+            {
+                for (int j = 0; j < lines.Length; j++)
                 {
-                    if (int.TryParse(str, out var num))
-                    {
-                        line.Add(num);
-                        str = "";
-                    }
+                    operation[j].Add(lines[j][i]);
                 }
             }
-            if (c == '\n' || i == input.Length - 1)
-            {
-                table.Add(line);
-                line = new(line.Count);
-            }
-            else if (c == '+') line.Add(1);
-            else if (c == '*') line.Add(2);
-            else str += c;
         }
 
-        return table;
+        parsed.Add(operation);
+
+        return parsed;
     }
 
-    public override string Part1(List<List<int>> parsed)
+    public override string Part1(List<List<char>[]> parsed)
     {
-        var ans = new List<long>();
+        var ans = 0L;
 
-        var operators = parsed.Last();
-        for (int i = 0; i < operators.Count; i++)
+        for (int i = 0; i < parsed.Count; i++)
         {
-            var op = operators[i];
+            var operation = parsed[i];
+            var op = operation.Last();
 
-            var nums = parsed.SkipLast(1).Select(line => line[i]);
+            var nums = operation.SkipLast(1).Select(chars =>
+            {
+                var str = chars.Aggregate("", (a, b) => $"{a}{b}");
+                return int.Parse(str);
+            });
 
-            ans.Add(op == 1 ? nums.Sum() : nums.Aggregate(1L, (a, b) => a * b));
+            ans += op[0] == '+' ? nums.Sum() : nums.Aggregate(1L, (a, b) => a * b);
         }
 
-        return ans.Sum().ToString();
+        return ans.ToString();
     }
 
-    public override string Part2(List<List<int>> parsed)
+    public override string Part2(List<List<char>[]> parsed)
     {
-        return "";
+        var ans = 0L;
+
+        for (int i = 0; i < parsed.Count; i++)
+        {
+            var operation = parsed[i];
+            var op = operation.Last();
+            var lines = operation.SkipLast(1);
+
+            var nums = new int[op.Count];
+
+            for (int j = 0; j < op.Count; j++)
+            {
+                var str = lines.Select(chars => chars[j]).Aggregate("", (a, b) => $"{a}{b}");
+                nums[j] = int.Parse(str);
+            }
+
+            ans += op[0] == '+' ? nums.Sum() : nums.Aggregate(1L, (a, b) => a * b);
+        }
+
+        return ans.ToString();
     }
 }
-// 16815738482 is too low

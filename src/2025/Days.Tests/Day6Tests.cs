@@ -7,11 +7,15 @@ public class Day6Tests
 
     public static IEnumerable<object[]> Data() => new List<object[]>()
     {
+        new object[]{@"12 12
+ 1 1 
++  + 
+", "26", "35"},
         new object[]{@"123 328  51 64 
  45 64  387 23 
   6 98  215 314
 *   +   *   +  
-", "4277556", ""},
+", "4277556", "3263827"},
     };
 
     [Theory]
