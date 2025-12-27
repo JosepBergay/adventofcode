@@ -42,15 +42,3 @@ public class Day4 : BaseDay<Map2D<char>>
         return total.ToString();
     }
 }
-
-public static class Direction
-{
-    public static readonly Point2D N = new(0, 1);
-    public static readonly Point2D NE = new(1, 1);
-    public static readonly Point2D E = new(1, 0);
-    public static readonly Point2D SE = new(1, -1);
-    public static readonly Point2D S = new(0, -1);
-    public static readonly Point2D SW = new(-1, -1);
-    public static readonly Point2D W = new(-1, 0);
-    public static readonly Point2D NW = new(-1, 1);
-}
