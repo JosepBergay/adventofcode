@@ -1,9 +1,8 @@
-using System.Collections;
 using System.Numerics;
 
-public class Day8 : BaseDay<List<Point3D>>
+public class Day8 : BaseDay<(Point3D, Point3D, double)[]>
 {
-    public override List<Point3D> Parse(string input)
+    public override (Point3D, Point3D, double)[] Parse(string input)
     {
         var list = new List<Point3D>();
 
@@ -18,55 +17,23 @@ public class Day8 : BaseDay<List<Point3D>>
             list.Add(Point3D.From(line.Split(",").Select(int.Parse)));
         }
 
-        return list;
-    }
-
-    private static (int, int) FindMinValueIdxs(double[][] table)
-    {
-        var minValue = double.MaxValue;
-        (int, int)? idxs = null;
-
-        for (int y = 0; y < table.Length; y++)
-        {
-            var row = table[y];
-            for (int x = 0; x < row.Length; x++)
-            {
-                var d = row[x];
-                if (d < minValue)
-                {
-                    idxs = (y, x);
-                    minValue = d;
-                }
-            }
-        }
-
-        if (idxs is null) throw new SystemException("There should be an available connection");
-
-        return idxs.Value;
-    }
-
-    public override string Part1(List<Point3D> parsed)
-    {
-        var table = parsed
+        return list
             .SkipLast(1)
-            .Select((p1, y) =>
-                parsed
+            .SelectMany((p1, y) =>
+                list
                     .Skip(y + 1)
-                    .Select(p2 => p1.Distance(p2))
-                    .ToArray())
+                    .Select(p2 => (p1, p2, distance: p1.Distance(p2))))
+            .OrderBy(it => it.distance)
             .ToArray();
+    }
 
-        var maxCount = parsed.Count > 20 ? 1000 : 10;
+    public override string Part1((Point3D, Point3D, double)[] parsed)
+    {
+        var maxCount = parsed.Length > 20 ? 1000 : 10;
         var adjDict = new Dictionary<Point3D, HashSet<Point3D>>();
 
-        for (int count = 0; count < maxCount; count++)
+        foreach (var (p1, p2, _) in parsed.Take(maxCount))
         {
-            var (y, x) = FindMinValueIdxs(table);
-            var p1 = parsed[y];
-            var p2 = parsed[x + y + 1];
-
-            table[y][x] = double.MaxValue;
-
             if (!adjDict.TryGetValue(p1, out HashSet<Point3D>? neighbours1))
             {
                 neighbours1 = [];
@@ -105,13 +72,15 @@ public class Day8 : BaseDay<List<Point3D>>
             circuits.Add(circuit);
         }
 
-        var sizes = circuits.Select(c => c.Count).ToArray();
-        sizes.Sort();
-
-        return sizes.TakeLast(3).Aggregate((a, b) => a * b).ToString();
+        return circuits
+            .Select(c => c.Count)
+            .OrderDescending()
+            .Take(3)
+            .Aggregate((a, b) => a * b)
+            .ToString();
     }
 
-    public override string Part2(List<Point3D> parsed)
+    public override string Part2((Point3D, Point3D, double)[] parsed)
     {
         return "";
     }
