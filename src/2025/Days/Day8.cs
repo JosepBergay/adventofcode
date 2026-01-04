@@ -135,7 +135,7 @@ public record Point3D(int X, int Y, int Z) : ISubtractionOperators<Point3D, Poin
         return new Point3D(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
     }
 
-    public double Length() => Math.Sqrt((long)X * (long)X + (long)Y * (long)Y + (long)Z * (long)Z);
+    public double Length() => Math.Sqrt((long)X * X + (long)Y * Y + (long)Z * Z);
 
     public double Distance(Point3D other) => (this - other).Length();
 }
