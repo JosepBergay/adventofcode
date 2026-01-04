@@ -15,7 +15,7 @@ public class Day9Tests
 2,5
 2,3
 7,3
-", "50", ""},
+", "50", "24"},
     };
 
     [Theory]
